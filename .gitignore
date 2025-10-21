@@ -1,0 +1,60 @@
+# =========================================
+# 🌐 MONOLITH SOCIAL NETWORK (Laravel + Next.js)
+# =========================================
+
+# --- Common ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+.env
+.env.*.local
+
+# =========================================
+# 🧩 NEXT.JS CLIENT (frontend)
+# =========================================
+client/node_modules/
+client/.next/
+client/out/
+client/build/
+client/.env
+client/.env.local
+client/.vercel/
+client/.turbo/
+client/.cache/
+client/coverage/
+client/next-env.d.ts
+client/*.tsbuildinfo
+client/.pnp
+client/.pnp.*
+client/.yarn/*
+!client/.yarn/patches
+!client/.yarn/plugins
+!client/.yarn/releases
+!client/.yarn/versions
+
+# =========================================
+# 🧱 LARAVEL SERVER (backend)
+# =========================================
+server/vendor/
+server/node_modules/
+server/public/storage/
+server/storage/*.key
+server/.env
+server/.env.backup
+server/.phpunit.result.cache
+server/composer.lock
+server/storage/logs/
+server/bootstrap/cache/*.php
+server/storage/framework/cache/
+server/storage/framework/sessions/
+server/storage/framework/views/
+
+# =========================================
+# 🧰 Miscellaneous
+# =========================================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

@@ -7,6 +7,8 @@ import { Home, MessageCircle, Search, UserIcon, Users } from 'lucide-react'
 import sponsored_img from './sponsored_img.png'
 import avatar_icon from "./avatar_icon.png";
 import image_placeholder from "./image_placeholder.jpeg";
+import clouds from "./clouds.jpg";
+import monolith_logo from "./monolith_logo.png"
 
 export const assets = {
     logo,
@@ -16,7 +18,9 @@ export const assets = {
     group_users,
     sponsored_img,
     avatar_icon,
-    image_placeholder
+    image_placeholder,
+    clouds,
+    monolith_logo
 }
 
 export const menuItemsData = [

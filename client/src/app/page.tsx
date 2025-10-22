@@ -1,6 +1,7 @@
 import Image from "next/image"
 import { assets } from "../../public/assets"
 import { Star } from "lucide-react"
+import LoginForm from "@/components/LoginForm"
 
 const Login = () => {
   return (
@@ -19,10 +20,15 @@ const Login = () => {
 
         <div>
           <h1 className="text-3xl md:text-6xl md:pb-2 font-bold bg-linear-to-r from-indigo-950 to-indigo-800 bg-clip-text text-transparent">More then just friends truly connect</h1>
-          <p className="text-xl md:text-3xl text-indigo-900 max-w-72 md:max-w-md">connect with global community on pingup.</p>
+          <p className="text-xl md:text-3xl text-indigo-900 max-w-72 md:max-w-md">connect with global community on monolith.</p>
         </div>
 
         <span className="md:h-10"></span>
+      </div>
+
+      {/* RIGHT SIDE: LOGIN FORM */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+        <LoginForm />
       </div>
     </div>
   )

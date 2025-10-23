@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import { Toaster } from "react-hot-toast";
+import UserContextProvider from "@/context/UserContext";
 
 const outfit = Outfit({
   variable: "--font-outfit",
@@ -22,7 +24,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={outfit.className}>
       <body className={`antialiased`}>
-        {children}
+        <Toaster />
+        <UserContextProvider>
+          {children}
+        </UserContextProvider>
       </body>
     </html>
   );

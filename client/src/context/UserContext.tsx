@@ -24,7 +24,7 @@ export const UserContext = createContext<UserContextType | undefined>(undefined)
 const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [user, setUser] = useState<UserData | null>(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     const router = useRouter();
 

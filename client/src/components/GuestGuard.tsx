@@ -2,6 +2,7 @@ import { UserContext } from "@/context/UserContext";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useContext } from "react";
+import Loading from "./Loading";
 
 export default function GuestGuard({ children } : { children: React.ReactNode }) {
     const context = useContext(UserContext);
@@ -19,7 +20,7 @@ export default function GuestGuard({ children } : { children: React.ReactNode })
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <p>Checking session...</p>
+                <Loading />
             </div>
         )
     }

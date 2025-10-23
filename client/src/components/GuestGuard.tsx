@@ -1,8 +1,10 @@
+"use client"
+
 import { UserContext } from "@/context/UserContext";
-import { useRouter } from "next/router";
 import { useEffect } from "react";
 import { useContext } from "react";
 import Loading from "./Loading";
+import { useRouter } from "next/navigation";
 
 export default function GuestGuard({ children } : { children: React.ReactNode }) {
     const context = useContext(UserContext);

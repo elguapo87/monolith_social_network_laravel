@@ -27,11 +27,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Successfully Registered',
-            'user' => $user
-        ]);
+        return response()->json($user);
     }
 
     public function login(Request $request)
@@ -51,11 +47,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Logged in successfully',
-            Auth::user()
-        ]);
+        return response()->json(Auth::user());
     }
 
     public function logout(Request $request)

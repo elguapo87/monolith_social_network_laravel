@@ -2,10 +2,16 @@
 
 import { useState } from 'react'
 import axios from "@/lib/axios"
+import type { AxiosError } from "axios";
 import toast from 'react-hot-toast';
 import { useContext } from 'react';
 import { UserContext } from '@/context/UserContext';
 import { useRouter } from 'next/navigation';
+
+type ValidationErrorResponse = {
+  message?: string;
+  errors?: Record<string, string[]>;
+}
 
 const LoginForm = () => {
 
@@ -49,15 +55,17 @@ const LoginForm = () => {
             const { data: user } = await axios.get("/api/user");
             console.log("Authenticated user:", user);
 
-        } catch (error: any) {
+        } catch (err) {
+            const error = err as AxiosError<{ errors?: Record<string, string[]> }>;
+
             if (error.response?.status === 422) {
-                const validationErrors = error.response.data.errors;
+                const validationErrors = error.response.data?.errors;
                 if (validationErrors?.email) {
-                    showError(validationErrors.email[0]); // e.g. "The email has already been taken."
+                showError(validationErrors.email[0]);
                 } else if (validationErrors?.password) {
-                    showError(validationErrors.password[0]);
+                showError(validationErrors.password[0]);
                 } else {
-                    showError("Validation failed");
+                showError("Validation failed");
                 }
             } else if (currentState === "Login") {
                 showError("Invalid email or password");

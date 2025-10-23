@@ -22,6 +22,11 @@ const LoginForm = () => {
 
     const router = useRouter();
 
+    const showError = (message: string) => {
+        setError(message);
+        setTimeout(() => setError(null), 3000);
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
@@ -48,16 +53,16 @@ const LoginForm = () => {
             if (error.response?.status === 422) {
                 const validationErrors = error.response.data.errors;
                 if (validationErrors?.email) {
-                    setError(validationErrors.email[0]); // e.g. "The email has already been taken."
+                    showError(validationErrors.email[0]); // e.g. "The email has already been taken."
                 } else if (validationErrors?.password) {
-                    setError(validationErrors.password[0]);
+                    showError(validationErrors.password[0]);
                 } else {
-                    setError("Validation failed");
+                    showError("Validation failed");
                 }
             } else if (currentState === "Login") {
-                setError("Invalid email or password");
+                showError("Invalid email or password");
             } else {
-                setError("Registration failed, please check your details");
+                showError("Registration failed, please check your details");
             }
 
         } finally {

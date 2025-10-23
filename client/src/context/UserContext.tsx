@@ -29,6 +29,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     const router = useRouter();
 
     const refreshUser = async () => {
+        setLoading(true);
+
         try {
             const { data } = await axios.get("/api/user");
             setUser(data);

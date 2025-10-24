@@ -1,8 +1,11 @@
+"use client"
+
 import { useEffect, useState } from "react"
 import { dummyStoriesData } from "../../public/assets"
 import { Plus } from "lucide-react";
 import Image from "next/image";
 import moment from "moment";
+import StoryModal from "./StoryModal";
 
 type StoriesType = typeof dummyStoriesData;
 
@@ -87,7 +90,7 @@ const StoriesBar = () => {
             </div>
 
             {/* ADD STORY MODAL */}
-            {showModal && "Story Modal"}
+            {showModal && <StoryModal setShowModal={setShowModal} fetchStories={fetchStories} />}
 
             {/* VIEW STORY MODAL */}
             {viewStory && "View Story"}

@@ -3,13 +3,30 @@
 import { UserContext } from "@/context/UserContext";
 import axios from "@/lib/axios";
 import { useRouter } from "next/navigation";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
+import { dummyPostsData } from "../../../public/assets";
+import Loading from "@/components/Loading";
+import StoriesBar from "@/components/StoriesBar";
+
+type FeedType = typeof dummyPostsData;
 
 const Feed = () => {
 
     const context = useContext(UserContext);
     if (!context) throw new Error("Feed must be inside UserContextProvider");
     const { setUser } = context;
+
+    const [feeds, setFeeds] = useState<FeedType>([]);
+    const [loading, setLoading] = useState(true);
+
+    const fetchFeeds = async () => {
+        setFeeds(dummyPostsData);
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchFeeds();
+    }, []);
 
     const router = useRouter();
 
@@ -25,15 +42,24 @@ const Feed = () => {
         }
     };
 
-    return (
-        <div className="px-2 flex items-center justify-between">
-            Feed
-            <button
-                onClick={() => handleLogout()}
-                className="px-2 py-1 bg-blue-500 text-stone-100 rounded border-none">
-                Logout
-            </button>
+    return !loading ? (
+        <div className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
+            {/* STORIES AND POST LIST */}
+            <div className="">
+                <StoriesBar />
+
+                <div className="p-4 space-y-6">
+                    List of posts
+                </div>
+            </div>
+
+            {/* RIGHT SIDEBAR */}
+            <div className="">
+                <h1>Recent Messages</h1>
+            </div>
         </div>
+    ) : (
+        <Loading />
     )
 }
 

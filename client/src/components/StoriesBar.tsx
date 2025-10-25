@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import Image from "next/image";
 import moment from "moment";
 import StoryModal from "./StoryModal";
+import StoryViewer from "./StoryViewer";
 
 type StoriesType = typeof dummyStoriesData;
 
@@ -93,7 +94,7 @@ const StoriesBar = () => {
             {showModal && <StoryModal setShowModal={setShowModal} fetchStories={fetchStories} />}
 
             {/* VIEW STORY MODAL */}
-            {viewStory && "View Story"}
+            {viewStory && <StoryViewer viewStory={viewStory} setViewStory={setViewStory} />}
         </div>
     )
 }

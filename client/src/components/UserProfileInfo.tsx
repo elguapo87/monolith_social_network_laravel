@@ -1,6 +1,7 @@
 import { Calendar, MapPin, PenBox, Verified } from "lucide-react";
 import moment from "moment";
 import Image, { StaticImageData } from "next/image";
+import { assets } from "../../public/assets";
 
 type ProfileProps = {
     user: {
@@ -59,7 +60,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }: ProfileProps) 
 
                 <div className="w-32 h-32 border-4 border-white shadow-lg absolute -top-16 rounded-full">
                     {user?.profile_picture && (
-                        <Image src={user.profile_picture} alt="" className="absolute rounded-full z-2" />
+                        <Image src={user.profile_picture || assets.avatar_icon} alt="" className="absolute rounded-full z-2" />
                     )}
                 </div>
 
@@ -76,7 +77,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }: ProfileProps) 
 
                         {/* If user is not on others profile that means he is opening his profile so we will give edit button */}
                         {
-                            !profileId
+                            profileId
                                 &&
                             <button
                                 onClick={() => setShowEdit(true)} 

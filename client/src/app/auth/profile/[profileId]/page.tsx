@@ -2,13 +2,14 @@
 
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react";
-import { dummyPostsData, dummyUserData } from "../../../../../public/assets";
+import { assets, dummyPostsData, dummyUserData } from "../../../../../public/assets";
 import Loading from "@/components/Loading";
 import Image from "next/image";
 import UserProfileInfo from "@/components/UserProfileInfo";
 import PostCard from "@/components/PostCard";
 import Link from "next/link";
 import moment from "moment";
+import ProfileModal from "@/components/ProfileModal";
 
 type UserData = typeof dummyUserData;
 type PostsData = typeof dummyPostsData;
@@ -39,7 +40,7 @@ const Proflie = () => {
 
           {/* COVER PHOTO */}
           <div className="relative h-40 md:h-56 bg-linear-to-r from-indigo-200 via-purple-200 to-pink-200">
-            <Image src={user.cover_photo} fill alt="Cover Photo" className="w-full h-full object-cover" />
+            <Image src={user.cover_photo || assets.image_placeholder} fill alt="Cover Photo" className="w-full h-full object-cover" />
           </div>
 
           {/* USER INFO */}
@@ -72,7 +73,6 @@ const Proflie = () => {
                 <PostCard key={post._id} post={post} />
               ))}
             </div>
-
           )
         }
 
@@ -101,7 +101,7 @@ const Proflie = () => {
       </div>
       
       {/* EFIT PROFILE MODAL */}
-      {showEdit && <p>Show profile edit</p>}
+      {showEdit && <ProfileModal setShowEdit={setShowEdit} />}
     </div>
   ) : (
     <Loading />

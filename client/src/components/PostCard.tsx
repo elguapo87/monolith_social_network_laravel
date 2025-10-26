@@ -26,7 +26,10 @@ const PostCard = ({ post }: { post: SinglePostType }) => {
             className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl"
         >
             {/* USER INFO */}
-            <div className="inline-flex items-center gap-3 cursor-pointer">
+            <div
+                onClick={() => router.push(`/auth/profile/${post.user._id}`)} 
+                className="inline-flex items-center gap-3 cursor-pointer"
+            >
                 <Image 
                     src={post.user.profile_picture || assets.avatar_icon} 
                     alt="" 

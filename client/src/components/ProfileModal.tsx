@@ -1,34 +1,100 @@
-import { useState } from "react";
-import { dummyUserData } from "../../public/assets"
+import { useContext, useState } from "react";
 import Image from "next/image";
 import { Pencil } from "lucide-react";
+import { UserContext } from "@/context/UserContext";
+import { assets } from "../../public/assets";
+import { ImageKitClient } from "imagekitio-next";
+import axios from "@/lib/axios";
 
 type ProfileProps = {
     setShowEdit: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const ProfileModal = ({ setShowEdit } : ProfileProps) => {
+interface MyImageKitOptions {
+    publicKey: string;
+    urlEndpoint: string;
+    authenticationEndpoint: string;
+};
 
-    const user = dummyUserData;
+const ProfileModal = ({ setShowEdit }: ProfileProps) => {
+
+    const context = useContext(UserContext);
+    if (!context) throw new Error("ProfileModal must be within UserContextProvider");
+    const { user, updateUser } = context;
 
     const [editForm, setEditForm] = useState<{
-        username: string;
+        user_name: string;
         bio: string;
         location: string;
         profile_picture: File | null;
         cover_photo: File | null;
         full_name: string;
     }>({
-        username: user.username,
-        bio: user.bio,
-        location: user.location,
+        user_name: user?.user_name ?? "",
+        bio: user?.bio ?? "",
+        location: user?.location ?? "",
         profile_picture: null,
         cover_photo: null,
-        full_name: user.full_name
+        full_name: user?.full_name ?? ""
     });
 
     const handleSaveProfile = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
+
+        const formData = new FormData();
+
+        // text fields
+        formData.append("user_name", editForm.user_name);
+        formData.append("full_name", editForm.full_name);
+        formData.append("location", editForm.location);
+        formData.append("bio", editForm.bio);
+
+        // upload profile picture if a new one is selected
+        if (editForm.profile_picture instanceof File) {
+            const imageKit = new ImageKitClient({
+                publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+                urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+                authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
+            } as MyImageKitOptions);
+
+            const { data: authData } = await axios.get("/api/imagekit-auth");
+
+            const uploadRes = await imageKit.upload({
+                file: editForm.profile_picture,
+                fileName: `${editForm.user_name}_profile.jpg`,
+                folder: "/monolith/user_images",
+                signature: authData.signature,
+                token: authData.token,
+                expire: authData.expire,
+            });
+
+            formData.append("profile_picture", uploadRes.url);
+        }
+
+        // upload cover photo if a new one is selected
+        if (editForm.cover_photo instanceof File) {
+            const imageKit = new ImageKitClient({
+                publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+                urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+                authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
+            } as MyImageKitOptions);
+
+            const { data: authData } = await axios.get("/api/imagekit-auth");
+
+            const uploadRes = await imageKit.upload({
+                file: editForm.cover_photo,
+                fileName: `${editForm.user_name}_cover.jpg`,
+                folder: "/monolith/user_images",
+                signature: authData.signature,
+                token: authData.token,
+                expire: authData.expire,
+            });
+
+            formData.append("cover_photo", uploadRes.url);
+        }
+
+        const success = await updateUser(formData);
+        if (success) setShowEdit(false);
     };
 
     return (
@@ -43,27 +109,29 @@ const ProfileModal = ({ setShowEdit } : ProfileProps) => {
                             <label htmlFor="profile_picture" className="block text-sm font-medium text-gray-700 mb-1">
                                 Profile Picture
                                 <input
-                                    onChange={(e) => { if (e.target.files) {
-                                        setEditForm({ ...editForm, profile_picture: e.target.files[0] })
-                                    }}}
-                                    type="file" 
-                                    accept="image/*" 
-                                    id="profile_picture" 
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            setEditForm({ ...editForm, profile_picture: e.target.files[0] })
+                                        }
+                                    }}
+                                    type="file"
+                                    accept="image/*"
+                                    id="profile_picture"
                                     hidden
                                 />
 
                                 <div className="group/profile relative">
-                                    <Image 
-                                        src={editForm.profile_picture ? 
-                                            URL.createObjectURL(editForm.profile_picture) : 
-                                            user.profile_picture}
+                                    <Image
+                                        src={editForm.profile_picture ?
+                                            URL.createObjectURL(editForm.profile_picture) :
+                                            user?.profile_picture || assets.avatar_icon}
                                         alt=""
                                         width={100}
                                         height={100}
-                                        className="w-24 h-24 rounded-full object-cover mt-2" 
+                                        className="w-24 h-24 rounded-full object-cover mt-2"
                                     />
 
-                                    <div 
+                                    <div
                                         className="absolute hidden group-hover/profile:flex top-0 left-0 right-0
                                             bottom-0 bg-black/20 rounded-full items-center justify-center"
                                     >
@@ -78,23 +146,25 @@ const ProfileModal = ({ setShowEdit } : ProfileProps) => {
                             <label htmlFor="cover_photo" className="block text-sm font-medium text-gray-700 mb-1">
                                 Cover Photo
                                 <input
-                                    onChange={(e) => { if (e.target.files) {
-                                        setEditForm({ ...editForm, cover_photo: e.target.files[0] })
-                                    }}}
-                                    type="file" 
-                                    accept="image/*" 
-                                    id="cover_photo" 
+                                    onChange={(e) => {
+                                        if (e.target.files) {
+                                            setEditForm({ ...editForm, cover_photo: e.target.files[0] })
+                                        }
+                                    }}
+                                    type="file"
+                                    accept="image/*"
+                                    id="cover_photo"
                                     hidden
                                 />
                                 <div className="group/hover relative">
-                                    <Image 
-                                        src={editForm.cover_photo ? 
-                                            URL.createObjectURL(editForm.cover_photo) : 
-                                            user.cover_photo} 
+                                    <Image
+                                        src={editForm.cover_photo ?
+                                            URL.createObjectURL(editForm.cover_photo) :
+                                            user?.cover_photo || assets.image_placeholder}
                                         alt=""
                                         width={320}
                                         height={160}
-                                        className="w-80 h-40 rounded-lg bg-gradient-to-r from-indigo-200
+                                        className="w-80 h-40 rounded-lg bg-linear-to-r from-indigo-200
                                             via-purple-200 to-pink-200 object-cover mt-2"
                                     />
 
@@ -109,26 +179,26 @@ const ProfileModal = ({ setShowEdit } : ProfileProps) => {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                             <input
                                 onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
                                 value={editForm.full_name}
                                 type="text"
-                                className="w-full p-3 border border-gray-200 rounded-lg" 
+                                className="w-full p-3 border border-gray-200 rounded-lg"
                                 placeholder="Please enter your full name"
-                                 
+
                             />
                         </div>
 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
                             <input
-                                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                                value={editForm.username}
+                                onChange={(e) => setEditForm({ ...editForm, user_name: e.target.value })}
+                                value={editForm.user_name}
                                 type="text"
-                                className="w-full p-3 border border-gray-200 rounded-lg" 
+                                className="w-full p-3 border border-gray-200 rounded-lg"
                                 placeholder="Please enter a username"
-                                 
+
                             />
                         </div>
 
@@ -138,20 +208,20 @@ const ProfileModal = ({ setShowEdit } : ProfileProps) => {
                                 rows={3}
                                 onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
                                 value={editForm.bio}
-                                className="w-full p-3 border border-gray-200 rounded-lg" 
-                                placeholder="Please enter a short bio" 
+                                className="w-full p-3 border border-gray-200 rounded-lg"
+                                placeholder="Please enter a short bio"
                             />
                         </div>
 
-                         <div>
+                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                             <input
                                 onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
                                 value={editForm.location}
                                 type="text"
-                                className="w-full p-3 border border-gray-200 rounded-lg" 
+                                className="w-full p-3 border border-gray-200 rounded-lg"
                                 placeholder="Please enter your location"
-                                 
+
                             />
                         </div>
 
@@ -165,8 +235,8 @@ const ProfileModal = ({ setShowEdit } : ProfileProps) => {
                                 Cancel
                             </button>
                             <button
-                                type="submit" 
-                                className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white
+                                type="submit"
+                                className="px-4 py-2 bg-linear-to-r from-indigo-500 to-purple-600 text-white
                                     rounded-lg hover:from-indigo-600 hover:to-purple-700 transition cursor-pointer"
                             >
                                 Save Changes

@@ -5,13 +5,15 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useState } from "react";
 import { createContext } from "react";
+import toast from "react-hot-toast";
 
 type UserData = {
     id: number;
     full_name: string;
-    username: string;
+    user_name: string;
     email: string;
-    profile_picture?: string;     
+    profile_picture?: string;
+    cover_photo?: string;
     bio: string;
     location: string | null;
 }
@@ -21,6 +23,7 @@ interface UserContextType {
     setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
     refreshUser: () => Promise<void>;
     loading: boolean;
+    updateUser: (formData: FormData) => Promise<boolean | undefined>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,6 +58,40 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const updateUser = async (formData: FormData): Promise<boolean | undefined> => {
+        try {
+            const { data } = await axios.post("/api/user/update", formData, {
+                headers: { "Content-Type": "multipart/form-data" }
+            });
+
+            if (data.success) {
+                setUser(data.user);
+                toast.success(data.message);
+                return true;
+
+            } else {
+                toast.error(data.message);
+                return false;
+            }
+
+        } catch (error) {
+            if (axios.isAxiosError(error) && error.response?.status === 422) {
+                const errors = error.response.data.errors;
+                if (errors?.user_name) {
+                    toast.error(errors.user_name[0]);
+                    return false;
+
+                } else {
+                    toast.error("Validation failed");
+                    return false;
+                }
+            } else {
+                toast.error("Failed to update profile");
+            }
+            return false;
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -62,7 +99,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     const value = {
         user, setUser,
         refreshUser,
-        loading
+        loading,
+        updateUser
     };
 
     return (

@@ -19,7 +19,8 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|confirmed|min:8',
             'profile_picture' => 'nullable|url'
-        ]);
+        ],
+        ['user_name.unique' => 'This username is already in use. Please pick another one.']);
 
         $user = User::create([
             'full_name' => $request->full_name,
@@ -66,5 +67,21 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         return response()->json($request->user());
+    }
+
+    public function updateProfilePicture(Request $request) 
+    {
+        $request->validate([
+            'profile_picture' => 'required|url'
+        ]);
+
+        $user = $request->user();
+        $user->update([
+            'profile_picture' => $request->profile_picture
+        ]);
+
+        return response()->json([
+            'user' => $user
+        ]);
     }
 }

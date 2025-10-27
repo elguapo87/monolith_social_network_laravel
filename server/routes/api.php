@@ -9,7 +9,10 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout']);
 
-Route::middleware(['auth:sanctum'])->get('/user', [AuthController::class, 'user']);
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user/profile-picture', [AuthController::class, 'updateProfilePicture']);
+});
 
 Route::get('/imagekit-auth', function (Request $request) {
     $publicKey = config('services.imageKit.public_key');

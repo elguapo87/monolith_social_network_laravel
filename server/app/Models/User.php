@@ -18,9 +18,31 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'full_name',
+        'user_name',
         'email',
         'password',
+        'bio',
+        'profile_picture',
+        'cover_photo',
+        'location',
+        'is_verified'
+    ];
+
+    // Followers (users who follow this user)
+    public function followers()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'user_id', 'follower_id');
+    }
+
+    // Following (users this user follows)
+    public function following()
+    {
+        return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
+    }
+
+    protected $attributes = [
+        'bio' => "Hi there! I'm using monolith."
     ];
 
     /**

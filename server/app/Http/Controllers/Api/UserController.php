@@ -275,4 +275,81 @@ class UserController extends Controller
             ]);
         }
     }
+
+    public function acceptConnectionRequest(Request $request) 
+    {
+        try {
+            $userId = Auth::id(); // current authenticated user
+            $fromUserId = $request->input('id'); // user who sent the request
+
+            // Find the connection request
+            $connection = Connection::where('from_user_id', $fromUserId)
+                ->where('to_user_id', $userId)
+                ->where('status', 'pending')
+                ->first();
+
+            if (!$connection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection not found'
+                ], 404);
+            }
+
+            // Mark as accepted
+            $connection->status = 'accepted';
+            $connection->save();
+
+            // Add each user to the other's connections pivot
+            $fromUser = User::select('id', 'full_name', 'username', 'profile_picture', 'bio')
+                ->findOrFail($fromUserId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Connection accepted.',
+                'connection' => $fromUser, // return sender info for UI update
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function declineConnectionRequest(Request $request) 
+    {
+        try {
+            $userId = Auth::id();
+            $fromUserId = $request->input('id'); // the user who sent the request
+
+            // Find pending connection (someone sent me a request)
+            $connection = Connection::where('from_user_id', $fromUserId)
+                ->where('to_user_id', $userId)
+                ->where('status', 'pending')
+                ->first();
+            
+            if (!$connection) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connection request not found or already handled.'
+                ], 404);
+            }
+
+            // Delete the request
+            $connection->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Connection request rejected',
+                'declined_user_id' => $fromUserId, 
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

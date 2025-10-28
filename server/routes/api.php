@@ -18,6 +18,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/toggle-follow', [UserController::class, 'toggleFollow']);
     Route::post('/connections/toggle', [UserController::class, 'toggleConnectionRequest']);
     Route::get('/connections', [UserController::class, 'getUserConnections']);
+    Route::post('/connections/accept', [UserController::class, 'acceptConnectionRequest']);
+    Route::post('/connections/decline', [UserController::class, 'declineConnectionRequest']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendConnectionRequestEmail;
+use App\Models\Connection;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -134,5 +136,83 @@ class UserController extends Controller
                 'following_count' => $followingUsers->count(),
             ]);
         }
+    }
+
+    public function toggleConnectionRequest(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:users,id',
+        ]);
+
+        $authUser = Auth::user();
+        $targetId = $request->id;
+
+        if ($authUser->id === $targetId) {
+            return response()->json([
+                'success' => false,
+                'message' => "You can't connect with yourself."
+            ], 400);
+        }
+
+        $connection = Connection::where(function ($q) use ($authUser, $targetId) {
+            $q->where('from_user_id', $authUser->id)
+                ->where('to_user_id', $targetId);
+        })->orWhere(function ($q) use ($authUser, $targetId) {
+            $q->where('from_user_id', $targetId)
+                ->where('to_user_id', $authUser->id);
+        })->first();
+
+        // If no connection exists → create new (pending)
+        if (!$connection) {
+            Connection::create([
+                'from_user_id' => $authUser->id,
+                'to_user_id' => $targetId,
+                'status' => 'pending'
+            ]);
+
+            $targetUser = User::select('id', 'full_name', 'user_name', 'profile_picture')->find($targetId);
+
+            // Dispatch the email job
+            dispatch(new SendConnectionRequestEmail(Auth::user(), User::find($targetId)));
+
+            return response()->json([
+                'success' => true,
+                'action' => 'sent',
+                'message' => 'Connection request sent.', // include the user data
+                'target_user' => $targetUser
+            ]);
+        }
+
+        // If pending & I am the sender → cancel
+        if ($connection->status === 'pending' && $connection->from_user_id === $authUser->id) {
+            $connection->delete();
+
+            return response()->json([
+                'success' => true,
+                'action' => 'cancelled',
+                'message' => 'Connection request cancelled.'
+            ]);
+        }
+
+        // If already accepted
+        if ($connection->status === 'accepted') {
+            return response()->json([
+                'success' => false,
+                'message' => 'You are already connected.',
+            ]);
+        }
+
+        // If I received a request (and not accepted yet)
+        if ($connection->status === 'pending' && $connection->to_user_id === $authUser->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You already have a pending connection request from this user.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid state.',
+        ]);
     }
 }

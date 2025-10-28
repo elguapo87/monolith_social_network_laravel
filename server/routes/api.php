@@ -16,6 +16,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/user/update', [UserController::class, 'updateUser']);
     Route::post('/discover-users', [UserController::class, 'discoverUsers']);
     Route::post('/toggle-follow', [UserController::class, 'toggleFollow']);
+    Route::post('/connections/toggle', [UserController::class, 'toggleConnectionRequest']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

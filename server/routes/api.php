@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/connections', [UserController::class, 'getUserConnections']);
     Route::post('/connections/accept', [UserController::class, 'acceptConnectionRequest']);
     Route::post('/connections/decline', [UserController::class, 'declineConnectionRequest']);
+    Route::post('/posts', [PostController::class, 'addPost']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

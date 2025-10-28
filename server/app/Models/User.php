@@ -69,6 +69,11 @@ class User extends Authenticatable
         return $sent->merge($received)->unique();
     }
 
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
     protected $attributes = [
         'bio' => "Hi there! I'm using monolith."
     ];

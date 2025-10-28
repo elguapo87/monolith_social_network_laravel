@@ -41,6 +41,34 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'followers', 'follower_id', 'user_id');
     }
 
+    // Connection requests I sent
+    public function sentConnections()
+    {
+        return $this->hasMany(Connection::class, 'from_user_id');
+    }
+
+    // Connection requests I received
+    public function receivedConnections()
+    {
+        return $this->hasMany(Connection::class, 'to_user_id');
+    }
+
+    // Accepted connections (bidirectional "friends")
+    public function friends()
+    {
+        // Sent & accepted
+        $sent = $this->sentConnections()
+            ->where('status', 'accepted')
+            ->pluck('to_user_id');
+
+        // Received & accepted
+        $received = $this->receivedConnections()
+            ->where('status', 'accepted')
+            ->pluck('from_user_id');
+        
+        return $sent->merge($received)->unique();
+    }
+
     protected $attributes = [
         'bio' => "Hi there! I'm using monolith."
     ];

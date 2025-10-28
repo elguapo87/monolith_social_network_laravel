@@ -77,7 +77,7 @@ class UserController extends Controller
         // Exclude the current user
         $users = $query->where('id', '!=', $currentUserId)
             ->limit(20) // 🔹 optional: avoid returning too many
-            ->get(['id', 'username', 'full_name', 'email', 'location', 'profile_picture', 'cover_photo', 'bio']);
+            ->get(['id', 'user_name', 'full_name', 'email', 'location', 'profile_picture', 'cover_photo', 'bio']);
 
         return response()->json([
             'success' => true,
@@ -214,5 +214,65 @@ class UserController extends Controller
             'success' => false,
             'message' => 'Invalid state.',
         ]);
+    }
+
+    public function getUserConnections(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $user = User::findOrFail($userId);
+
+            // Accepted (mutual) connections
+            $accepted = Connection::where(function ($q) use ($userId) {
+                $q->where('from_user_id', $userId)
+                    ->orWhere('to_user_id', $userId);
+            })
+                ->where('status', 'accepted')
+                ->with([
+                    'fromUser:id,full_name,user_name,profile_picture,bio',
+                    'toUser:id,full_name,user_name,profile_picture,bio'
+                ])
+                ->get()
+                ->map(function ($conn) use ($userId) {
+                    return $conn->from_user_id === $userId ? $conn->toUser : $conn->fromUser;
+                });
+
+            // Pending requests (people I sent requests to)
+            $pendingSent = Connection::where('from_user_id', $userId)
+                ->where('status', 'pending')
+                ->with('toUser:id,full_name,user_name,profile_picture,bio')
+                ->get()
+                ->pluck('toUser');
+
+            // Pending requests I received (people who sent requests to me)
+            $pendingReceived = Connection::where('to_user_id', $userId)
+                ->where('status', 'pending')
+                ->with('fromUser:id,full_name,user_name,profile_picture,bio')
+                ->get()
+                ->pluck('fromUser');
+
+            // Followers and following
+            $followers = $user->followers()
+                ->select('users.id', 'users.full_name', 'users.user_name', 'users.profile_picture', 'users.bio')
+                ->get();
+            $following = $user->following()
+                ->select('users.id', 'users.full_name', 'users.user_name', 'users.profile_picture', 'users.bio')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'connections' => $accepted,
+                'followers' => $followers,
+                'following' => $following,
+                'pendingConnections' => $pendingSent,
+                'incomingConnections' => $pendingReceived       
+            ]);
+                
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]);
+        }
     }
 }

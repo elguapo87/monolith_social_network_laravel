@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\PostController;
 use App\Http\Controllers\Api\StoryController;
 use App\Http\Controllers\Api\UserController;
@@ -28,6 +29,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user/profile', [UserController::class, 'getUserProfile']);
     Route::post('/stories/add', [StoryController::class, 'addUserStory']);
     Route::get('/stories', [StoryController::class, 'getStories']);
+    Route::post('/messages/send', [MessageController::class, 'sendMessage']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

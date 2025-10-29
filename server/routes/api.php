@@ -22,6 +22,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/connections/accept', [UserController::class, 'acceptConnectionRequest']);
     Route::post('/connections/decline', [UserController::class, 'declineConnectionRequest']);
     Route::post('/posts', [PostController::class, 'addPost']);
+    Route::get('/posts/feed-posts', [PostController::class, 'getFeedPosts']);
+    Route::post('/posts/{post}/like', [PostController::class, 'likePost']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

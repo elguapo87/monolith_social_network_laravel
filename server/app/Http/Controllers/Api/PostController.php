@@ -31,4 +31,66 @@ class PostController extends Controller
             'post' => $post
         ]);
     }
+
+    public function getFeedPosts(Request $request)
+    {
+        $user = Auth::user();
+
+        // Collect user IDs: self + following + friends
+        $userIds = collect([$user->id])
+            ->merge($user->following()->pluck('id'))
+            ->merge($user->friends()->pluck('id'))
+            ->unique();
+
+        // Fetch posts
+        $posts = Post::whereIn('user_id', $userIds)
+            ->with([
+                'author:id,full_name,user_name,profile_picture',
+                'likes:id'
+            ])
+            ->withCount('likes')  // adds likes_count
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Transform response a bit to match your frontend needs
+        $posts->transform(function ($post) use ($user) {
+            return [
+                'id'            => $post->id,
+                'content'       => $post->content,
+                'image_urls'    => $post->image_urls,
+                'post_type'     => $post->post_type,
+                'created_at'    => $post->created_at,
+                'author'        => $post->author,
+                'likes_count'   => $post->likes_count,
+                'likes'         => $post->likes->pluck('id'), // array of user IDs
+                'liked_by_me'   => $post->likes->contains($user->id),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'posts'   => $posts,
+        ]);
+    }
+
+    public function likePost(Post $post)
+    {
+        $userId = Auth::id();
+
+        // Toggle like/unlike
+        $post->likes()->toggle($userId);
+
+        // Check if the user currently likes the post
+        $isLiked = $post->likes()->where('user_id', $userId)->exists();
+
+        // Always return accurate count
+        $likesCount = $post->likes()->count();
+
+        return response()->json([
+            'success' => true,
+            'message' => $isLiked ? 'Post liked' : 'Post unliked',
+            'isLiked' => $isLiked,
+            'likes_count' => $likesCount
+        ]);
+    }
 }

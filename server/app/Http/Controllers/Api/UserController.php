@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendConnectionRequestEmail;
 use App\Models\Connection;
+use App\Models\Post;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -351,5 +352,30 @@ class UserController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getUserProfile(Request $request)
+    {
+        $profileId = $request->input('profile_id');  // from request body
+        $profile = User::find($profileId);
+
+        if (!$profile) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Profile not found'
+            ], 404);
+        }
+
+        // get posts of this user (with author relation)
+        $posts = Post::with('author')
+            ->where('user_id', $profileId)
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'profile' => $profile,
+            'posts' => $posts
+        ]);
     }
 }

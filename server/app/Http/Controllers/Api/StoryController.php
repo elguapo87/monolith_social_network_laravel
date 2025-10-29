@@ -55,18 +55,18 @@ class StoryController extends Controller
             // Own ID
             $userIds = [$user->id];
 
-            // Friends (connections) – already returns only users, so "id" is safe
-            $friends = $user->friends()->toArray();
-            $userIds = array_merge($userIds, $friends);
+            // Add friends (accepted connections)
+            $friendIds = $user->friends()->toArray();
+            $userIds = array_merge($userIds, $friendIds);
 
-            // Following – need "users.id" to avoid ambiguity
-            $following = $user->following()->pluck('users.id')->toArray();
-            $userIds = array_merge($userIds, $following);
+            // Add following users
+            $followingIds = $user->following()->pluck('users.id')->toArray();
+            $userIds = array_merge($userIds, $followingIds);
 
             // Remove duplicates
             $userIds = array_unique($userIds);
 
-            // Fetch stories with their user
+            // Fetch stories 
             $stories = Story::with('user:id,full_name,user_name,profile_picture')
                 ->whereIn('user_id', $userIds)
                 ->orderBy('created_at', 'desc')

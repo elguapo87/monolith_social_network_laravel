@@ -74,6 +74,11 @@ class User extends Authenticatable
         return $this->hasMany(Post::class);
     }
 
+    public function stories()
+    {
+        return $this->hasMany(Story::class);
+    }
+
     protected $attributes = [
         'bio' => "Hi there! I'm using monolith."
     ];

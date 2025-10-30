@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MessageController extends Controller
 {
@@ -83,6 +84,36 @@ class MessageController extends Controller
                 'success' => true,
                 'messages' => $messages
             ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getUnreadMessagesBySender(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+
+            $unreadMessages = Message::where('to_user_id', $userId)
+                ->where('seen', false)
+                ->with('fromUser:id,full_name,user_name,profile_picture')
+                ->select(
+                    'from_user_id',
+                    DB::raw('COUNT(*) as unread_count'),
+                    DB::raw('MAX(created_at) as latest_created_at')
+                )
+                ->groupBy('from_user_id')
+                ->orderByDesc('latest_created_at')
+                ->get();
+
+                return response()->json([
+                    'success' => true,
+                    'unread_messages' => $unreadMessages,
+                ]);
 
         } catch (\Exception $e) {
             return response()->json([

@@ -31,6 +31,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/stories', [StoryController::class, 'getStories']);
     Route::post('/messages/send', [MessageController::class, 'sendMessage']);
     Route::get('/messages/get-messages', [MessageController::class, 'getChatMessages']);
+    Route::get('/messages/unread-messages', [MessageController::class, 'getUnreadMessagesBySender']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

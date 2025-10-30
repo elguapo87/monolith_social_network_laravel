@@ -74,6 +74,7 @@ const CreatePost = () => {
                 post_type: postType,
                 image_urls: uploadUrls
             });
+            
             if (data.success) {
                 toast.success(data.message);
                 setContent("");

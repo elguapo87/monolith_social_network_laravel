@@ -18,12 +18,33 @@ type UserData = {
     location: string | null;
 }
 
+export type FeedsData = {        
+    author: {
+        id: number;
+        profile_picture: string;
+        full_name: string;
+        user_name: string;
+    }
+    content: string;
+    created_at?: Date;
+    id: number; 
+    image_urls: string[];
+    liked_by_me?: boolean;
+    likes: number[];
+    likes_count: number;
+    post_type: string;
+};
+
 interface UserContextType {
     user: UserData | null;
     setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
     refreshUser: () => Promise<void>;
     loading: boolean;
     updateUser: (formData: FormData) => Promise<boolean | undefined>;
+    feeds: FeedsData[];                                             
+    setFeeds: React.Dispatch<React.SetStateAction<FeedsData[]>>;
+    fetchFeedPosts: () => Promise<void>; 
+    feedLoading: boolean;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -32,6 +53,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
 
     const [user, setUser] = useState<UserData | null>(null);
     const [loading, setLoading] = useState(true);
+    const [feeds, setFeeds] = useState<FeedsData[]>([]);
+    const [feedLoading, setFeedLoading] = useState(false);
 
     const router = useRouter();
 
@@ -92,6 +115,23 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const fetchFeedPosts = async () => {
+        try {
+            setFeedLoading(true);
+            const { data } = await axios.get("/api/posts/feed-posts");
+            if (data.success) {
+                setFeeds(data.posts);
+            }
+
+        } catch (error) {
+            console.error(error);
+            throw error;
+
+        } finally {
+            setFeedLoading(false);
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -100,7 +140,10 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         user, setUser,
         refreshUser,
         loading,
-        updateUser
+        updateUser,
+        feeds, setFeeds,
+        fetchFeedPosts,
+        feedLoading
     };
 
     return (

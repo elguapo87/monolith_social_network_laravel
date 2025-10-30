@@ -38,7 +38,7 @@ class PostController extends Controller
 
         // Collect user IDs: self + following + friends
         $userIds = collect([$user->id])
-            ->merge($user->following()->pluck('id'))
+            ->merge($user->following()->pluck('users.id'))
             ->merge($user->friends()->pluck('id'))
             ->unique();
 

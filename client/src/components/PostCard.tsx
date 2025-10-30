@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { assets, dummyPostsData, dummyUserData } from "../../public/assets"
+import { assets, dummyUserData } from "../../public/assets"
 import Image from "next/image";
 import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
+import { FeedsData } from "@/context/UserContext";
 
-type SinglePostType = typeof dummyPostsData[number];
 
-const PostCard = ({ post }: { post: SinglePostType }) => {
+
+const PostCard = ({ post }: { post: FeedsData }) => {
 
     const postWithHashtags = post.content.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>');
 
@@ -21,29 +22,28 @@ const PostCard = ({ post }: { post: SinglePostType }) => {
     };
 
     return (
-        <div
-            onClick={() => router.push(`/auth/profile/${post.user._id}`)} 
-            className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl"
-        >
+        <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
             {/* USER INFO */}
             <div
-                onClick={() => router.push(`/auth/profile/${post.user._id}`)} 
+                onClick={() => router.push(`/auth/profile/${post.author.id}`)} 
                 className="inline-flex items-center gap-3 cursor-pointer"
             >
                 <Image 
-                    src={post.user.profile_picture || assets.avatar_icon} 
+                    src={post.author.profile_picture || assets.avatar_icon} 
                     alt="" 
+                    width={40}
+                    height={40}
                     className="w-10 h-10 rounded-full shadow"
                 />
 
                 <div>
                     <div className="flex items-center space-x-1">
-                        <span>{post.user.full_name}</span>
+                        <span>{post.author.full_name}</span>
                         <BadgeCheck className="w-4 h-4 text-blue-500" />
                     </div>
 
                     <div className="text-gray-500 text-sm">
-                        @{post.user.username} &bull; {moment(post.createdAt).fromNow()}
+                        @{post.author.user_name} &bull; {moment(post.created_at).fromNow()}
                     </div>
                 </div>
             </div>
@@ -77,9 +77,9 @@ const PostCard = ({ post }: { post: SinglePostType }) => {
                     <Heart
                         onClick={handleLike}
                         className={`w-4 h-4 cursor-pointer 
-                            ${likes.includes(currentUser._id) && "text-red-500 fill-red-500"}`} 
+                            ${post.liked_by_me && "text-red-500 fill-red-500"}`} 
                     />
-                    <span>{likes.length}</span>
+                    <span>{post.likes_count}</span>
                 </div>
 
                 <div className="flex items-center gap-1">

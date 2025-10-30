@@ -9,6 +9,7 @@ import { CirclePlus, LogOut } from "lucide-react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { UserContext } from "@/context/UserContext";
 import axios from "@/lib/axios";
+import ProfileModal from "./ProfileModal";
 
 type AuthLayoutProps = {
   sidebarOpen: boolean;
@@ -22,6 +23,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen } : AuthLayoutProps) => {
   const { setUser, user } = context;
 
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const dropdownRef = useRef(null);
 
   const router = useRouter();
@@ -87,13 +89,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen } : AuthLayoutProps) => {
             className="flex gap-2 items-center cursor-pointer"
           >
             <Image 
-              src={assets.sample_profile} 
+              src={user?.profile_picture || assets.avatar_icon} 
               alt="Profile-Image" 
+              width={32}
+              height={32}
               className="w-8 h-8 aspect-square rounded-full" 
             />
             <div>
-              <h1 className="text-sm font-medium">{user?.name}</h1>
-              <p className="text-xs text-gray-500">@{user?.name}</p>
+              <h1 className="text-sm font-medium">{user?.full_name}</h1>
+              <p className="text-xs text-gray-500">@{user?.user_name}</p>
             </div>
           </div>
 
@@ -102,14 +106,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen } : AuthLayoutProps) => {
               &&
             <div 
               className="absolute bottom-full mb-2 left-0 w-48 bg-white border border-gray-200
-                rounded-lg shadow-lg z-10"
+                rounded-lg shadow-lg z-10 cursor-pointer"
             >
-              <Link
-                href={`/auth/profileUpdate/${user?.id}`}
+              <div
+                onClick={() => { setShowEdit(true); setDropdownOpen(false); }}
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
                 Update Pofile
-              </Link>
+              </div>
 
               <button
                 onClick={handleLogout} 
@@ -126,6 +130,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen } : AuthLayoutProps) => {
           className="w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer" 
         />
       </div>
+
+      {showEdit && <ProfileModal setShowEdit={setShowEdit} />}
     </div>
   )
 }

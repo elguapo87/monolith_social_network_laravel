@@ -43,4 +43,52 @@ class MessageController extends Controller
             ], 500);
         }
     }
+
+    public function getChatMessages(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+            $toUserId = $request->input('to_user_id');
+
+            // Validate input
+            if (!$toUserId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Recipient user ID is required'
+                ], 400);
+            }
+
+            // Fetch all messages between both users
+            $messages = Message::where(function ($query) use ($userId, $toUserId) {
+                $query->where('from_user_id', $userId)
+                    ->where('to_user_id', $toUserId);
+            })
+                ->orWhere(function ($query) use ($userId, $toUserId) {
+                    $query->where('from_user_id', $toUserId)
+                        ->where('to_user_id', $userId);
+                })
+                ->orderBy('created_at', 'desc')
+                ->with('fromUser:id,full_name,user_name,profile_picture')
+                ->with('toUser:id,full_name,user_name,profile_picture')
+                ->get();
+
+            // Mark messages from the other user as "seen"
+            $updatedCount = Message::where('from_user_id', $toUserId)
+                ->where('to_user_id', $userId)
+                ->where('seen', false)
+                ->update(['seen' => true]);
+
+            // Return messages
+            return response()->json([
+                'success' => true,
+                'messages' => $messages
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

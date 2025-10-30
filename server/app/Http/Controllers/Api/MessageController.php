@@ -122,4 +122,70 @@ class MessageController extends Controller
             ], 500);
         }
     }
+
+    public function getUserRecentMessages(Request $request)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Get last message (read or unread) per conversation
+            $recentConversations = Message::select(
+                DB::raw('
+                    CASE 
+                        WHEN from_user_id = ' . $userId . ' THEN to_user_id 
+                        ELSE from_user_id 
+                    END as other_user_id
+                '),
+                DB::raw('MAX(created_at) as latest_created_at')
+            )
+                ->where(function ($query) use ($userId) {
+                    $query->where('from_user_id', $userId)
+                        ->orWhere('to_user_id', $userId);
+                })
+                ->groupBy('other_user_id')
+                ->orderByDesc('latest_created_at')
+                ->limit(5)
+                ->get();
+
+            // Map data: fetch each last message + unread count
+            $recentConversations = $recentConversations->map(function ($conv) use ($userId) {
+                $latestMessage = Message::where(function ($query) use ($userId, $conv) {
+                    $query->where('from_user_id', $userId)
+                        ->where('to_user_id', $conv->other_user_id);
+                })
+                    ->orWhere(function ($query) use ($userId, $conv) {
+                        $query->where('from_user_id', $conv->other_user_id)
+                            ->where('to_user_id', $userId);
+                    })
+                    ->orderByDesc('created_at')
+                    ->with(['fromUser:id,full_name,user_name,profile_picture'])
+                    ->first();
+
+                $unreadCount = Message::where('from_user_id', $conv->other_user_id)
+                    ->where('to_user_id', $userId)
+                    ->where('seen', false)
+                    ->count();
+
+                return [
+                    'user' => $latestMessage->from_user_id == $userId
+                        ? $latestMessage->toUser
+                        : $latestMessage->fromUser,
+                    'latest_message' => $latestMessage->text ?? 'Media',
+                    'latest_created_at' => $latestMessage->created_at,
+                    'unread_count' => $unreadCount,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'recent_messages' => $recentConversations,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

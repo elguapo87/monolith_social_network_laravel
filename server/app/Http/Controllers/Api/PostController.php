@@ -93,4 +93,39 @@ class PostController extends Controller
             'likes_count' => $likesCount
         ]);
     }
+
+    public function getUserPosts($id = null)
+    {
+        $authUser = Auth::user();
+        $userId = $id ?? $authUser->id;  // if no id passed, show logged in user's posts
+
+        $posts = Post::where('user_id', $userId)
+            ->with([
+                'author:id,full_name,user_name,profile_picture',
+                'likes:id'     // you can check if current user liked it
+            ])
+            ->withCount('likes')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Transform response for frontend needs
+        $posts->transform(function ($post) use ($authUser) {
+            return [
+                'id'            => $post->id,
+                'content'       => $post->content,
+                'image_urls'    => $post->image_urls,
+                'post_type'     => $post->post_type,
+                'created_at'    => $post->created_at,
+                'author'        => $post->author,
+                'likes_count'   => $post->likes_count,
+                'likes'         => $post->likes->pluck('id'),
+                'liked_by_me'   => $post->likes->contains($authUser->id),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'posts'   => $posts,
+        ]);
+    }
 }

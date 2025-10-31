@@ -378,4 +378,13 @@ class UserController extends Controller
             'posts' => $posts
         ]);
     }
+
+    public function getSelectedUser($id)
+    {
+        $user = User::with(['followers', 'following'])->findOrFail($id);
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
+    }
 }

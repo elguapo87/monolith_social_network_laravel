@@ -19,7 +19,7 @@ const Feed = () => {
     }, []);
 
     return (
-        <div className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
+        <div  className="h-full overflow-y-scroll no-scrollbar py-10 xl:pr-5 flex items-start justify-center xl:gap-8">
             {/* STORIES AND POST LIST */}
             <div className="">
                 <StoriesBar />

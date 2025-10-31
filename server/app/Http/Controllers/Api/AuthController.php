@@ -66,6 +66,20 @@ class AuthController extends Controller
 
     public function user(Request $request)
     {
+        $user = $request->user();
+
+        $user->load([
+            'followers:id,full_name,user_name,profile_picture',
+            'following:id,full_name,user_name,profile_picture'
+        ]);
+
+        $connections = $user->friends();
+
+        // Attach to user object for JSON response
+        $user->connections = User::whereIn('id', $connections)
+            ->select('id', 'full_name', 'user_name', 'profile_picture')
+            ->get();
+
         return response()->json($request->user());
     }
 

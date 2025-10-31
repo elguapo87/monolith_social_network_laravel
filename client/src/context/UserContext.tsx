@@ -52,7 +52,8 @@ interface UserContextType {
     fetchUserPosts: (id?: number | string) => Promise<void>;
     otherUser: UserData | null;
     setOtherUser: React.Dispatch<React.SetStateAction<UserData | null>>;
-    fetchSelectedUser: (id: number | string) => Promise<void>; 
+    fetchSelectedUser: (id: number | string) => Promise<void>;
+    likePost: (postId: number | string) => Promise<void>; 
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -175,6 +176,34 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const likePost = async (postId: number | string) => {
+        try {
+            const { data } = await axios.post(`/api/posts/${postId}/like`);
+            if (data.success) {
+                toast.success(data.message);
+
+                setFeeds(prev => 
+                    prev.map(post =>
+                        post.id === postId
+                            ? {
+                                ...post,
+                                liked_by_me: data.isLiked,
+                                likes_count: data.likes_count ?? post.likes_count
+                            }
+                            : post
+                    )
+                );
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -190,7 +219,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         userPosts,
         fetchUserPosts,
         otherUser, setOtherUser,
-        fetchSelectedUser
+        fetchSelectedUser,
+        likePost
     };
 
     return (

@@ -16,6 +16,9 @@ type UserData = {
     cover_photo?: string;
     bio: string;
     location: string | null;
+    created_at: Date;
+    followers: string[];
+    following: string[];
 }
 
 export type FeedsData = {        
@@ -45,6 +48,11 @@ interface UserContextType {
     setFeeds: React.Dispatch<React.SetStateAction<FeedsData[]>>;
     fetchFeedPosts: () => Promise<void>; 
     feedLoading: boolean;
+    userPosts: FeedsData[];
+    fetchUserPosts: (id: number | string) => Promise<void>;
+    otherUser: UserData | null;
+    setOtherUser: React.Dispatch<React.SetStateAction<UserData | null>>;
+    fetchSelectedUser: (id: number | string) => Promise<void>; 
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,6 +63,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const [feeds, setFeeds] = useState<FeedsData[]>([]);
     const [feedLoading, setFeedLoading] = useState(false);
+    const [userPosts, setUserPosts] = useState<FeedsData[]>([]);
+    const [otherUser, setOtherUser] = useState<UserData | null>(null);
 
     const router = useRouter();
 
@@ -132,6 +142,39 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const fetchUserPosts = async (id: number | string) => {
+        try {
+            setFeedLoading(true);
+
+            const url = id ? `/api/users/${id}/posts` : "/api/my-posts";
+            
+            const { data } = await axios.get(url);
+            if (data.success) {
+                setUserPosts(data.posts);
+            }
+
+        } catch (error) {
+            console.error(error);
+            throw error;
+
+        } finally {
+            setFeedLoading(false);
+        }
+    };
+
+    const fetchSelectedUser = async (id: number | string) => {
+        try {
+            const { data } = await axios.get(`/api/users/${id}`);
+            if (data.success) {
+                setOtherUser(data.user);
+            }
+
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -143,7 +186,11 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         updateUser,
         feeds, setFeeds,
         fetchFeedPosts,
-        feedLoading
+        feedLoading,
+        userPosts,
+        fetchUserPosts,
+        otherUser, setOtherUser,
+        fetchSelectedUser
     };
 
     return (

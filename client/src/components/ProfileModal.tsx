@@ -38,63 +38,75 @@ const ProfileModal = ({ setShowEdit }: ProfileProps) => {
         full_name: user?.full_name ?? ""
     });
 
+    const [isLoading, setIsLoading] = useState(false);
+
     const handleSaveProfile = async (e: { preventDefault: () => void; }) => {
         e.preventDefault();
 
-        const formData = new FormData();
+        setIsLoading(true);
 
-        // text fields
-        formData.append("user_name", editForm.user_name);
-        formData.append("full_name", editForm.full_name);
-        formData.append("location", editForm.location);
-        formData.append("bio", editForm.bio);
+        try {
+            const formData = new FormData();
 
-        // upload profile picture if a new one is selected
-        if (editForm.profile_picture instanceof File) {
-            const imageKit = new ImageKitClient({
-                publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-                urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-                authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
-            } as MyImageKitOptions);
+            // text fields
+            formData.append("user_name", editForm.user_name);
+            formData.append("full_name", editForm.full_name);
+            formData.append("location", editForm.location);
+            formData.append("bio", editForm.bio);
 
-            const { data: authData } = await axios.get("/api/imagekit-auth");
+            // upload profile picture if a new one is selected
+            if (editForm.profile_picture instanceof File) {
+                const imageKit = new ImageKitClient({
+                    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+                    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+                    authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
+                } as MyImageKitOptions);
 
-            const uploadRes = await imageKit.upload({
-                file: editForm.profile_picture,
-                fileName: `${editForm.user_name}_profile.jpg`,
-                folder: "/monolith/user_images",
-                signature: authData.signature,
-                token: authData.token,
-                expire: authData.expire,
-            });
+                const { data: authData } = await axios.get("/api/imagekit-auth");
 
-            formData.append("profile_picture", uploadRes.url);
+                const uploadRes = await imageKit.upload({
+                    file: editForm.profile_picture,
+                    fileName: `${editForm.user_name}_profile.jpg`,
+                    folder: "/monolith/user_images",
+                    signature: authData.signature,
+                    token: authData.token,
+                    expire: authData.expire,
+                });
+
+                formData.append("profile_picture", uploadRes.url);
+            }
+
+            // upload cover photo if a new one is selected
+            if (editForm.cover_photo instanceof File) {
+                const imageKit = new ImageKitClient({
+                    publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+                    urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+                    authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
+                } as MyImageKitOptions);
+
+                const { data: authData } = await axios.get("/api/imagekit-auth");
+
+                const uploadRes = await imageKit.upload({
+                    file: editForm.cover_photo,
+                    fileName: `${editForm.user_name}_cover.jpg`,
+                    folder: "/monolith/user_images",
+                    signature: authData.signature,
+                    token: authData.token,
+                    expire: authData.expire,
+                });
+
+                formData.append("cover_photo", uploadRes.url);
+            }
+
+            const success = await updateUser(formData);
+            if (success) setShowEdit(false);
+
+        } catch (error) {
+            console.error("Error saving profile:", error);
+             
+        } finally {
+            setIsLoading(false);
         }
-
-        // upload cover photo if a new one is selected
-        if (editForm.cover_photo instanceof File) {
-            const imageKit = new ImageKitClient({
-                publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
-                urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
-                authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
-            } as MyImageKitOptions);
-
-            const { data: authData } = await axios.get("/api/imagekit-auth");
-
-            const uploadRes = await imageKit.upload({
-                file: editForm.cover_photo,
-                fileName: `${editForm.user_name}_cover.jpg`,
-                folder: "/monolith/user_images",
-                signature: authData.signature,
-                token: authData.token,
-                expire: authData.expire,
-            });
-
-            formData.append("cover_photo", uploadRes.url);
-        }
-
-        const success = await updateUser(formData);
-        if (success) setShowEdit(false);
     };
 
     return (
@@ -236,10 +248,14 @@ const ProfileModal = ({ setShowEdit }: ProfileProps) => {
                             </button>
                             <button
                                 type="submit"
-                                className="px-4 py-2 bg-linear-to-r from-indigo-500 to-purple-600 text-white
-                                    rounded-lg hover:from-indigo-600 hover:to-purple-700 transition cursor-pointer"
+                                disabled={isLoading}
+                                className={`px-4 py-2 text-white rounded-lg transition cursor-pointer
+                                    ${isLoading
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                                    }`}
                             >
-                                Save Changes
+                                {isLoading ? "Saving..." : "Save Changes"}
                             </button>
                         </div>
                     </form>

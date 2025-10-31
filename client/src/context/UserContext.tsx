@@ -7,7 +7,7 @@ import { useState } from "react";
 import { createContext } from "react";
 import toast from "react-hot-toast";
 
-type UserData = {
+export type UserData = {
     id: number;
     full_name: string;
     user_name: string;
@@ -49,7 +49,7 @@ interface UserContextType {
     fetchFeedPosts: () => Promise<void>; 
     feedLoading: boolean;
     userPosts: FeedsData[];
-    fetchUserPosts: (id: number | string) => Promise<void>;
+    fetchUserPosts: (id?: number | string) => Promise<void>;
     otherUser: UserData | null;
     setOtherUser: React.Dispatch<React.SetStateAction<UserData | null>>;
     fetchSelectedUser: (id: number | string) => Promise<void>; 
@@ -142,7 +142,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const fetchUserPosts = async (id: number | string) => {
+    const fetchUserPosts = async (id?: number | string) => {
         try {
             setFeedLoading(true);
 

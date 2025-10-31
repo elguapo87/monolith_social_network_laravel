@@ -2,53 +2,11 @@ import { Calendar, MapPin, PenBox, Verified } from "lucide-react";
 import moment from "moment";
 import Image, { StaticImageData } from "next/image";
 import { assets } from "../../public/assets";
+import { FeedsData, UserData } from "@/context/UserContext";
 
 type ProfileProps = {
-    user: {
-        _id: string;
-        email: string;
-        full_name: string;
-        username: string;
-        bio: string;
-        profile_picture: StaticImageData;
-        cover_photo: StaticImageData;
-        location: string;
-        followers: string[];
-        following: string[];
-        connections: string[];
-        posts: never[];
-        is_verified: boolean;
-        createdAt: string;
-        updatedAt: string;
-    } | null;
-
-    posts: {
-        _id: string;
-        user: {
-            _id: string;
-            email: string;
-            full_name: string;
-            username: string;
-            bio: string;
-            profile_picture: StaticImageData;
-            cover_photo: StaticImageData;
-            location: string;
-            followers: string[];
-            following: string[];
-            connections: string[];
-            posts: never[];
-            is_verified: boolean;
-            createdAt: string;
-            updatedAt: string;
-        };
-        content: string;
-        image_urls: string[];
-        post_type: string;
-        likes_count: string[];
-        createdAt: string;
-        updatedAt: string;
-    }[];
-
+    user: UserData | null;
+    posts: FeedsData[];
     profileId: string | number;
     setShowEdit: React.Dispatch<React.SetStateAction<boolean>>;
 };
@@ -60,7 +18,12 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }: ProfileProps) 
 
                 <div className="w-32 h-32 border-4 border-white shadow-lg absolute -top-16 rounded-full">
                     {user?.profile_picture && (
-                        <Image src={user.profile_picture || assets.avatar_icon} alt="" className="absolute rounded-full z-2" />
+                        <Image 
+                            src={user.profile_picture || assets.avatar_icon} 
+                            alt=""
+                            width={128}                                   
+                            height={128}  
+                            className="absolute aspect-square rounded-full z-2" />
                     )}
                 </div>
 
@@ -72,7 +35,9 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }: ProfileProps) 
                                 <Verified className="w-6 h-6 text-blue-500" />
                             </div>
 
-                            <p className="text-gray-600">{user?.username ? `@${user.username}` : "Add a username"}</p>
+                            <p className="text-gray-600">
+                                {user?.user_name ? `@${user.user_name}` : "Add a username"}
+                            </p>
                         </div>
 
                         {/* If user is not on others profile that means he is opening his profile so we will give edit button */}
@@ -99,7 +64,7 @@ const UserProfileInfo = ({ user, posts, profileId, setShowEdit }: ProfileProps) 
 
                         <span className="flex items-center gap-1.5">
                             <Calendar className="w-4 h-4" />
-                            Joined <span className="font-medium">{moment(user?.createdAt).fromNow()}</span>
+                            Joined <span className="font-medium">{moment(user?.created_at).fromNow()}</span>
                         </span>
                     </div>
 

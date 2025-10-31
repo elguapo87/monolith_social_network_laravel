@@ -1,7 +1,7 @@
 "use client"
 
 import { useParams } from "next/navigation"
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { assets, dummyPostsData, dummyUserData } from "../../../../../public/assets";
 import Loading from "@/components/Loading";
 import Image from "next/image";
@@ -10,29 +10,42 @@ import PostCard from "@/components/PostCard";
 import Link from "next/link";
 import moment from "moment";
 import ProfileModal from "@/components/ProfileModal";
+import { UserContext } from "@/context/UserContext";
 
 type UserData = typeof dummyUserData;
 type PostsData = typeof dummyPostsData;
 
-const Proflie = () => {
+const Profile = () => {
+
+  const context = useContext(UserContext);
+  if (!context) throw new Error("Profile must be within UserContextProvider");
+  const { user, fetchUserPosts, userPosts, setOtherUser, fetchSelectedUser, otherUser } = context;
 
   const { profileId } = useParams() as { profileId: string | number };
   
-  const [user, setUser] = useState<UserData | null>(null);
-  const [posts, setPosts] = useState<PostsData>([]);
   const [activeTab, setActiveTab] = useState("posts");
   const [showEdit, setShowEdit] = useState(false);
+
+  const numericProfileId = Number(profileId);
+  const isCurrentUser = user && user.id === numericProfileId;
   
-  const fetchUser = async () => {
-    setUser(dummyUserData);
-    setPosts(dummyPostsData);
-  };
-
   useEffect(() => {
-    fetchUser();
-  }, []);
+    const fetchData = async () => {
+      if (isCurrentUser) {
+        // logged-in user's own profile
+        await fetchUserPosts();
+        setOtherUser(null);
 
-  return user ? (
+      } else {
+        await fetchSelectedUser(numericProfileId);
+        await fetchUserPosts(numericProfileId);
+      }
+    };
+
+    fetchData();
+  }, [numericProfileId]);
+
+  return isCurrentUser || otherUser ? (
     <div className="relative h-full overflow-y-scroll bg-gray-50 p-6">
       <div className="max-w-3xl mx-auto">
         {/* PROFILE CARD */}
@@ -40,11 +53,21 @@ const Proflie = () => {
 
           {/* COVER PHOTO */}
           <div className="relative h-40 md:h-56 bg-linear-to-r from-indigo-200 via-purple-200 to-pink-200">
-            <Image src={user.cover_photo || assets.image_placeholder} fill alt="Cover Photo" className="w-full h-full object-cover" />
+            <Image
+              src={(isCurrentUser ? user.cover_photo : otherUser?.cover_photo) || assets.image_placeholder} 
+              fill 
+              alt="Cover Photo" 
+              className="w-full h-full object-cover" 
+            />
           </div>
 
           {/* USER INFO */}
-          <UserProfileInfo user={user} posts={posts} profileId={profileId} setShowEdit={setShowEdit} />
+          <UserProfileInfo
+            user={isCurrentUser ? user! : otherUser!} 
+            posts={userPosts} 
+            profileId={profileId} 
+            setShowEdit={setShowEdit} 
+          />
         </div>
 
         {/* TABS */}
@@ -69,9 +92,11 @@ const Proflie = () => {
             &&
           (
             <div className="mt-6 flex flex-col items-center gap-6">
-              {posts.map((post) => (
-                <PostCard key={post._id} post={post} />
-              ))}
+              {userPosts.length > 0 ? (
+                userPosts.map((post) => <PostCard key={post.id} post={post} />)
+              ) : (
+                <p className="text-center text-slate-500">There are no posts yet.</p>
+              )}
             </div>
           )
         }
@@ -81,21 +106,38 @@ const Proflie = () => {
           activeTab === "media"
             &&
           <div className="flex flex-wrap mt-6 max-w-6xl">
-            {posts.filter((post) => post.image_urls.length > 0).map((post) => (
-              <div key={post._id}>
-                {post.image_urls.map((image, index) => (
-                  <Link href={image} key={index} target="_blank" className="relative group">
-                    <Image src={image} alt="" width={500} height={500} className="w-64 aspect-video object-cover" />
-                    <p 
-                      className="absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl text-white 
-                        opacity-0 group-hover:opacity-100 transition duration-300"
+            {userPosts.filter((post) => post.image_urls.length > 0).length > 0 ? (
+              userPosts.filter((post) => post.image_urls.length > 0).map((post) => (
+                <div key={post.id}>
+                  {post.image_urls.map((image, index) => (
+                    <Link
+                      href={image}
+                      key={index}
+                      target="_blank"
+                      className="relative group"
                     >
-                      Posted {moment(post.createdAt).fromNow()}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            ))}
+                      <Image 
+                        src={image}
+                        alt=""
+                        width={500}
+                        height={500}
+                        className="w-64 aspect-video object-cover"
+                      />
+                      <p
+                        className="absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl text-white 
+                          opacity-0 group-hover:opacity-100 transition duration-300"
+                      >
+                        Posted {moment(post.created_at).fromNow()}
+                        </p>
+                    </Link>
+                  ))}
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-slate-500 w-full">
+                There are no posts with images yet.
+              </p>
+            )}
           </div>
         }
       </div>
@@ -108,4 +150,4 @@ const Proflie = () => {
   )
 }
 
-export default Proflie
+export default Profile

@@ -1,14 +1,18 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { assets, dummyUserData } from "../../public/assets"
 import Image from "next/image";
 import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
-import { FeedsData } from "@/context/UserContext";
+import { FeedsData, UserContext } from "@/context/UserContext";
 
 
 
 const PostCard = ({ post }: { post: FeedsData }) => {
+
+    const context = useContext(UserContext);                                             
+    if (!context) throw new Error("PostCard must be within UserContextProvider");
+    const { likePost } = context
 
     const postWithHashtags = post.content.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>');
 
@@ -16,10 +20,6 @@ const PostCard = ({ post }: { post: FeedsData }) => {
     const currentUser = dummyUserData;
 
     const router = useRouter();
-
-    const handleLike = async () => {
-
-    };
 
     return (
         <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
@@ -75,7 +75,7 @@ const PostCard = ({ post }: { post: FeedsData }) => {
             <div className="flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300">
                 <div className="flex items-center gap-1">
                     <Heart
-                        onClick={handleLike}
+                        onClick={() => likePost(post.id)}
                         className={`w-4 h-4 cursor-pointer 
                             ${post.liked_by_me && "text-red-500 fill-red-500"}`} 
                     />

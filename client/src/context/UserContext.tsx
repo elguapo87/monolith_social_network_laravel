@@ -38,6 +38,24 @@ export type FeedsData = {
     post_type: string;
 };
 
+export type StoryType = {               
+    id: number;
+    background_color: string;
+    content: string;
+    created_at: Date;
+    media_type: string;
+    media_url: string;
+    updated_at: Date;
+    user_id: number;
+    user: {
+        id: number;
+        full_name: string;
+        profile_picture: string;
+        username: string;
+    }
+    views_count: string[];
+};
+
 interface UserContextType {
     user: UserData | null;
     setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -53,7 +71,9 @@ interface UserContextType {
     otherUser: UserData | null;
     setOtherUser: React.Dispatch<React.SetStateAction<UserData | null>>;
     fetchSelectedUser: (id: number | string) => Promise<void>;
-    likePost: (postId: number | string) => Promise<void>; 
+    likePost: (postId: number | string) => Promise<void>;
+    stories: StoryType[]; 
+    fetchStories: () => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -66,6 +86,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [feedLoading, setFeedLoading] = useState(false);
     const [userPosts, setUserPosts] = useState<FeedsData[]>([]);
     const [otherUser, setOtherUser] = useState<UserData | null>(null);
+    const [stories, setStories] = useState<StoryType[]>([]);
 
     const router = useRouter();
 
@@ -204,6 +225,19 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const fetchStories = async () => {
+        try {
+            const { data } = await axios.get("/api/stories");
+            if (data.success) {
+                setStories(data.stories);
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to fatch stories");
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -220,7 +254,9 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         fetchUserPosts,
         otherUser, setOtherUser,
         fetchSelectedUser,
-        likePost
+        likePost,
+        stories,
+        fetchStories
     };
 
     return (

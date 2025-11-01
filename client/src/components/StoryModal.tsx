@@ -1,16 +1,28 @@
 "use client"
 
+import { UserContext } from "@/context/UserContext";
+import axios from "@/lib/axios";
+import { ImageKitClient } from "imagekitio-next";
 import { ArrowLeft, Sparkle, TextIcon, Upload } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import toast from "react-hot-toast";
+
+interface MyImageKitOptions {
+    publicKey: string;
+    urlEndpoint: string;
+    authenticationEndpoint: string;
+};
 
 type Props = {
     setShowModal: React.Dispatch<React.SetStateAction<boolean>>;
-    fetchStories: () => Promise<void>;
 };
 
-const StoryModal = ({ setShowModal, fetchStories }: Props) => {
+const StoryModal = ({ setShowModal } : Props) => {
+
+    const context = useContext(UserContext);                                               
+    if (!context) throw new Error("StoriesBar must be within UserContextProvider");
+    const { fetchStories } = context;
 
     const bgColors = [
         "#4f46e5",
@@ -26,16 +38,106 @@ const StoryModal = ({ setShowModal, fetchStories }: Props) => {
     const [text, setText] = useState("");
     const [media, setMedia] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false); 
+
+    const MAX_VIDEO_DURATION = 60; // seconds
+    const MAX_VIDEO_SIZE_MB = 50 // MB
 
     const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setMedia(file);
-            setPreviewUrl(URL.createObjectURL(file));
+            if (file.type.startsWith("video")) {
+                if (file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
+                    toast.error(`Video file size cannot exeed ${MAX_VIDEO_SIZE_MB}MB.`);
+                    setMedia(null);
+                    setPreviewUrl(null);
+                    return;
+                }
+                const video = document.createElement("video");
+                video.preload = 'metadata';
+                video.onloadedmetadata = () => {
+                    window.URL.revokeObjectURL(video.src);
+                    if (video.duration > MAX_VIDEO_DURATION) {
+                        toast.error("Video duration cannot exeed 1 minute.");
+                        setMedia(null);
+                        setPreviewUrl(null);
+                        return;
+
+                    } else {
+                        setMedia(file);
+                        setPreviewUrl(URL.createObjectURL(file));
+                        setText("");
+                        setMode("media");
+                    }
+                }
+                video.src = URL.createObjectURL(file);
+
+            } else if (file.type.startsWith("image")) {
+                setMedia(file);
+                setPreviewUrl(URL.createObjectURL(file));
+                setText("");
+                setMode("media");
+            }
         }
     };
 
     const handleCreateStory = async () => {
+        try {
+            setLoading(true);
+
+            const media_type = mode === "media" ?
+                media?.type.startsWith("image") ? "image" : "video" : "text";
+
+                if (media_type === "text" && !text) {
+                    toast.error("Please enter some text");
+                    return;
+                }
+
+                let formData = new FormData();
+                formData.append("content", text);
+                formData.append("media_type", media_type);
+                formData.append("background_color", background);
+
+                await axios.get("/sanctum/csrf-cookie");
+                
+                if (media instanceof File) {
+                    const imageKit = new ImageKitClient({
+                        publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY!,
+                        urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT!,
+                        authenticationEndpoint: "http://localhost:8000/api/imagekit-auth",
+                    } as MyImageKitOptions);
+
+                    const { data: authData } = await axios.get("/api/imagekit-auth");
+                    const uploadRes = await imageKit.upload({
+                        file: media,
+                        fileName: media.name,
+                        folder: "/monolith/stories",
+                        signature: authData.signature,
+                        token: authData.token,
+                        expire: authData.expire,
+                    });
+
+                    formData.append("media", uploadRes.url);
+                }
+
+                const { data } = await axios.post("/api/stories/add", formData);
+                if (data.success) {
+                    toast.success(data.message);
+                    await fetchStories();
+                    setShowModal(false);
+                    setLoading(false);
+
+                } else {
+                    toast.error(data.message);
+                }
+            
+        } catch (error) {
+            console.error(error);
+            toast.error("Something went wrong while creating story");
+
+        } finally {
+            setLoading(false);
+        }
 
     };
 
@@ -112,18 +214,16 @@ const StoryModal = ({ setShowModal, fetchStories }: Props) => {
                 </div>
 
                 <button
-                    onClick={() => toast.promise(handleCreateStory(), {
-                        loading: "Saving...",
-                        success: <p>Story Added</p>,
-                        error: e => <p>{e.message}</p>,
-                    })}
-                    className="flex items-center justify-center gap-2 text-white py-3 mt-4 w-full rounded
-                        bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 
-                        hover:to-purple-700 active:scale-95 transition cursor-pointer"
+                    onClick={handleCreateStory}
+                    disabled={loading}
+                    className={`flex items-center justify-center gap-2 text-white py-3 mt-4 w-full rounded
+                        bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 
+                        hover:to-purple-700 active:scale-95 transition cursor-pointer
+                        ${loading ? "opacity-70 cursor-not-allowed" : ""}`}
                 >
-                    <Sparkle size={18} /> Create Story
+                    <Sparkle size={18} />
+                    {loading ? "Saving..." : "Create Story"} 
                 </button>
-
             </div>
         </div>
     )

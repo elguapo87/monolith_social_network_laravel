@@ -2,61 +2,11 @@ import Image, { StaticImageData } from "next/image";
 import { useEffect, useState } from "react";
 import { assets } from "../../public/assets";
 import { BadgeCheck, X } from "lucide-react";
+import { StoryType } from "@/context/UserContext";
 
 type Props = {
-    viewStory: {
-        _id: string;
-        user: {
-            _id: string;
-            email: string;
-            full_name: string;
-            username: string;
-            bio: string;
-            profile_picture: StaticImageData;
-            cover_photo: StaticImageData;
-            location: string;
-            followers: string[];
-            following: string[];
-            connections: string[];
-            posts: never[];
-            is_verified: boolean;
-            createdAt: string;
-            updatedAt: string;
-        };
-        content: string;
-        media_url: string;
-        media_type: string;
-        background_color: string;
-        createdAt: string;
-        updatedAt: string;
-    } | null;
-
-    setViewStory: React.Dispatch<React.SetStateAction<{
-        _id: string;
-        user: {
-            _id: string;
-            email: string;
-            full_name: string;
-            username: string;
-            bio: string;
-            profile_picture: StaticImageData;
-            cover_photo: StaticImageData;
-            location: string;
-            followers: string[];
-            following: string[];
-            connections: string[];
-            posts: never[];
-            is_verified: boolean;
-            createdAt: string;
-            updatedAt: string;
-        };
-        content: string;
-        media_url: string;
-        media_type: string;
-        background_color: string;
-        createdAt: string;
-        updatedAt: string;
-    } | null>>;
+    viewStory: StoryType | null;
+    setViewStory: React.Dispatch<React.SetStateAction<StoryType | null>>;
 }
 
 const StoryViewer = ({ viewStory, setViewStory }: Props) => {
@@ -168,6 +118,8 @@ const StoryViewer = ({ viewStory, setViewStory }: Props) => {
                 <Image 
                     src={viewStory?.user.profile_picture || assets.avatar_icon}
                     alt=""
+                    width={32}
+                    height={32}
                     className="size-7 sm:size-8 rounded-full object-cover border border-white" 
                 />
 

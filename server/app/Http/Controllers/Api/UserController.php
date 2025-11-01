@@ -64,7 +64,8 @@ class UserController extends Controller
         $input = $request->input('input', '');
         $currentUserId = Auth::id();
 
-        $query = User::query();
+        $query = User::query()
+            ->withCount('followers');
 
         if (!empty($input)) {
             $query->where(function ($q) use ($input) {

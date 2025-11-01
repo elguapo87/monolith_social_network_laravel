@@ -16,9 +16,12 @@ export type UserData = {
     cover_photo?: string;
     bio: string;
     location: string | null;
-    created_at: Date;
-    followers: string[];
-    following: string[];
+    created_at?: Date;
+    followers?: string[];
+    following?: string[];
+    is_verified?: number;
+    updated_at?: Date;
+    connections?: [];
 }
 
 export type FeedsData = {        

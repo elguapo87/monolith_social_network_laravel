@@ -96,7 +96,7 @@ const StoryViewer = ({ viewStory, setViewStory }: Props) => {
 
     return (
         <div
-            className="fixed inset-0 z-110 h-screen bg-black bg-opacity-90 z-110 flex
+            className="fixed inset-0 h-screen bg-black bg-opacity-90 z-110 flex
                 items-center justify-center"
             style={{ background: viewStory?.media_type === "text" 
                 ? viewStory.background_color : "#000000" }}
@@ -104,7 +104,7 @@ const StoryViewer = ({ viewStory, setViewStory }: Props) => {
             {/* PROGRESS BAR */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gray-700">
                 <div
-                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500
+                    className="h-full bg-linear-to-r from-purple-500 via-pink-500
                      to-red-500 transition-all duration-100 linear"
                     style={{ width: `${progress}%` }}
                 />

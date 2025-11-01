@@ -75,7 +75,7 @@ const Discover = () => {
 
                 <div className="flex flex-wrap gap-6">
                     {users.map((user) => (
-                        <UserCard key={user.id} user={user} />
+                        <UserCard key={user.id} profile={user} />
                     ))}
                 </div>
 

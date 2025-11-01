@@ -17,14 +17,17 @@ export type UserData = {
     bio: string;
     location: string | null;
     created_at?: Date;
-    followers?: string[];
-    following?: string[];
     is_verified?: number;
     updated_at?: Date;
-    connections?: [];
+
+    // Relational & computed fields 
+    followers_count?: number;
+    followers?: string[];
+    following?: string[];
+    connections?: string[];
 }
 
-export type FeedsData = {        
+export type FeedsData = {
     author: {
         id: number;
         profile_picture: string;
@@ -33,7 +36,7 @@ export type FeedsData = {
     }
     content: string;
     created_at?: Date;
-    id: number; 
+    id: number;
     image_urls: string[];
     liked_by_me?: boolean;
     likes: number[];
@@ -41,7 +44,7 @@ export type FeedsData = {
     post_type: string;
 };
 
-export type StoryType = {               
+export type StoryType = {
     id: number;
     background_color: string;
     content: string;
@@ -54,9 +57,25 @@ export type StoryType = {
         id: number;
         full_name: string;
         profile_picture: string;
-        username: string;
+        user_name: string;
     }
     views_count: string[];
+};
+
+type RelationUser = {
+    id: number;
+    full_name: string;
+    user_name: string;
+    profile_picture?: string;
+    bio?: string;
+};
+
+type ConnectionType = {
+    connections: RelationUser[];
+    followers: RelationUser[];
+    following: RelationUser[];
+    pendingConnections: RelationUser[];
+    incomingConnections: RelationUser[];
 };
 
 interface UserContextType {
@@ -65,9 +84,9 @@ interface UserContextType {
     refreshUser: () => Promise<void>;
     loading: boolean;
     updateUser: (formData: FormData) => Promise<boolean | undefined>;
-    feeds: FeedsData[];                                             
+    feeds: FeedsData[];
     setFeeds: React.Dispatch<React.SetStateAction<FeedsData[]>>;
-    fetchFeedPosts: () => Promise<void>; 
+    fetchFeedPosts: () => Promise<void>;
     feedLoading: boolean;
     userPosts: FeedsData[];
     fetchUserPosts: (id?: number | string) => Promise<void>;
@@ -75,8 +94,12 @@ interface UserContextType {
     setOtherUser: React.Dispatch<React.SetStateAction<UserData | null>>;
     fetchSelectedUser: (id: number | string) => Promise<void>;
     likePost: (postId: number | string) => Promise<void>;
-    stories: StoryType[]; 
+    stories: StoryType[];
     fetchStories: () => Promise<void>;
+    fetchConnections: () => Promise<void>;
+    relations: ConnectionType;
+    toggleFollow: (userId: number | string) => Promise<void>;
+    toggleConnectionRequest: (userId: string | number) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -90,27 +113,42 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     const [userPosts, setUserPosts] = useState<FeedsData[]>([]);
     const [otherUser, setOtherUser] = useState<UserData | null>(null);
     const [stories, setStories] = useState<StoryType[]>([]);
+    const [relations, setRelations] = useState<ConnectionType>({
+        connections: [],
+        followers: [],
+        following: [],
+        pendingConnections: [],
+        incomingConnections: []
+    });
 
     const router = useRouter();
 
     const refreshUser = async () => {
-        setLoading(true);
-
         try {
-            const { data } = await axios.get("/api/user");
-            setUser(data);
+            setLoading(true);
 
+            const { data } = await axios.get("/api/user");
+
+            if (data) {
+                setUser({
+                    ...data,
+                    following: data.following?.map((f: any) =>
+                        typeof f === "object" ? String(f.id) : String(f)
+                    ) ?? [],
+                    followers: data.followers?.map((f: any) =>
+                        typeof f === "object" ? String(f.id) : String(f)
+                    ) ?? [],
+                });
+            }
         } catch (error) {
             // If it's a 401, make sure user is null and optionally redirect
             if (axios.isAxiosError(error) && error.response?.status === 401) {
                 setUser(null);
                 router.push("/");
-
             } else {
                 // other errors: treat as not-logged-in but keep silent
                 setUser(null);
             }
-
         } finally {
             setLoading(false);
         }
@@ -172,7 +210,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
             setFeedLoading(true);
 
             const url = id ? `/api/users/${id}/posts` : "/api/my-posts";
-            
+
             const { data } = await axios.get(url);
             if (data.success) {
                 setUserPosts(data.posts);
@@ -206,7 +244,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
             if (data.success) {
                 toast.success(data.message);
 
-                setFeeds(prev => 
+                setFeeds(prev =>
                     prev.map(post =>
                         post.id === postId
                             ? {
@@ -241,6 +279,100 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const fetchConnections = async () => {
+        try {
+            const { data } = await axios.get("/api/connections");
+            if (data.success) {
+                setRelations({
+                    connections: data.connections,
+                    followers: data.followers,
+                    following: data.following,
+                    pendingConnections: data.pendingConnections,
+                    incomingConnections: data.incomingConnections
+                });
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to fatch connections");
+        }
+    };
+
+    const toggleFollow = async (userId: number | string) => {
+        try {
+            // Check if user is already following this profile
+            const isFollowing = user?.following?.some((fId) => String(fId) === String(userId));
+
+            const { data } = await axios.post("/api/toggle-follow", { id: userId });
+            if (data.success) {
+                toast.success(data.message);
+
+                // Optimistically update local state
+                setUser((prevUser) => {
+                    if (!prevUser) return prevUser;
+                    const following = prevUser.following || [];
+
+                    return {
+                        ...prevUser,
+                        following: isFollowing
+                            ? following.filter((id) => String(id) !== String(userId))  // remove
+                            : [...following, String(userId)]  // add
+                    };
+                });
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("Toggle follow failed:", error);
+            toast.error("Something went wrong while updating follow status.");
+        }
+    };
+
+    const toggleConnectionRequest = async (userId: number | string) => {
+        try {
+            const { data } = await axios.post("/api/connections/toggle", { id: userId });
+            if (data.success) {
+                toast.success(data.message);
+                setRelations((prev) => {
+                    const alreadyPending = prev.pendingConnections.some((u) => String(u.id) === String(userId));
+
+                    if (data.action === "sent" && data.target_user) {
+                        // Add full user info directly from backend
+                        return {
+                            ...prev,
+                            pendingConnections: [...prev.pendingConnections, data.target_user],
+                        };
+                    }
+
+                    if (data.action === "cancelled") {
+                        // Remove canceled request
+                        return {
+                            ...prev,
+                            pendingConnections: prev.pendingConnections.filter((u) => String(u.id) !== String(userId))
+                        };
+                    }
+
+                    return prev;
+                });
+
+                // Refresh all connections 
+                await fetchConnections();
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("toggleConnectionRequest error:", error);
+            toast.error("Something went wrong.");
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -259,7 +391,11 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         fetchSelectedUser,
         likePost,
         stories,
-        fetchStories
+        fetchStories,
+        fetchConnections,
+        relations,
+        toggleFollow,
+        toggleConnectionRequest
     };
 
     return (

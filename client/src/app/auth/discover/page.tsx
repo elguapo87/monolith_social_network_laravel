@@ -1,27 +1,48 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Search } from 'lucide-react';
-import { dummyConnectionsData } from '../../../../public/assets';
 import UserCard from '@/components/UserCard';
 import Loading from '@/components/Loading';
+import { UserData } from '@/context/UserContext';
+import axios from '@/lib/axios';
 
 const Discover = () => {
 
     const [input, setInput] = useState("");
-    const [users, setUsers] = useState(dummyConnectionsData);
+    const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const handleSearch = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
+    // Debounce logic: triggers search 500ms after user stops typing 
+    useEffect(() => {
+        // If input is empty, clear results and stop
+        if (input.trim() === "") {
             setUsers([]);
-            setLoading(true);
-            setTimeout(() => {
-                setUsers(dummyConnectionsData);
-                setLoading(false);
-            }, 1000)
+            setLoading(false);
+            return;
         }
-    };
+
+        const delayDebaunce = setTimeout(async () => {
+            setLoading(true);
+
+            try {
+                const { data } = await axios.post("/api/discover-users", { input });
+                if (data.success) {
+                    setUsers(data.users);
+                    setLoading(false);
+                }
+
+            } catch (error) {
+                console.error("Search failed:", error);
+
+            } finally {
+                setLoading(false);
+            }
+        }, 500);  // 500ms debounce
+
+        return () => clearTimeout(delayDebaunce);
+        
+    }, [input]);
 
     return (
         <div className="min-h-screen bg-linear-to-b from-slate-50 to-white">
@@ -41,7 +62,6 @@ const Discover = () => {
                                     -translate-y-1/2 text-slate-400 w-5 h-5" 
                             />
                             <input
-                                onKeyUp={handleSearch} 
                                 type="text"
                                 onChange={(e) => setInput(e.target.value)}
                                 value={input}
@@ -55,7 +75,7 @@ const Discover = () => {
 
                 <div className="flex flex-wrap gap-6">
                     {users.map((user) => (
-                        <UserCard key={user._id} user={user} />
+                        <UserCard key={user.id} user={user} />
                     ))}
                 </div>
 

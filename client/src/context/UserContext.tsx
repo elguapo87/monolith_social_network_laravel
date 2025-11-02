@@ -78,6 +78,30 @@ type ConnectionType = {
     incomingConnections: RelationUser[];
 };
 
+type MessageType = {            
+    id: number;
+    from_user: {
+        id: number;
+        full_name: string;
+        username: string;
+        profile_picture: string;
+    };
+    to_user: {
+        id: number;
+        full_name: string;
+        username: string;
+        profile_picture: string;
+    };
+    from_user_id: number;
+    to_user_id: number;
+    text: string;
+    message_type: string;
+    media_url: string;
+    created_at?: Date;
+    updated_at?: Date;
+    seen: boolean;
+};
+
 interface UserContextType {
     user: UserData | null;
     setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -102,6 +126,10 @@ interface UserContextType {
     toggleConnectionRequest: (userId: string | number) => Promise<void>;
     acceptConnectionRequest: (userId: number | string) => Promise<void>;
     declineConnectionRequest: (userId: number | string) => Promise<void>;
+    messages: MessageType[]; 
+    setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
+    sendMessage: (userId: number | string, text?: string, mediaUrl?: string) => Promise<void>; 
+    fetchChatMessages: (userId: number | string) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -122,6 +150,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         pendingConnections: [],
         incomingConnections: []
     });
+    const [messages, setMessages] = useState<MessageType[]>([]);
 
     const router = useRouter();
 
@@ -422,6 +451,45 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const sendMessage = async (userId: number | string, text?: string, media_url?: string) => {
+        try {
+            if (!text && !media_url) {
+                toast.error("Cannot send empty message");
+                return;
+            }
+
+            const payload = {
+                to_user_id: userId,
+                text: text || null,
+                media_url: media_url || null
+            };
+
+            const { data } = await axios.post("/api/messages/send", payload);
+            if (data.success && data.message) {
+                const newMessage = data.message;
+
+                // Optimistically add to local chat
+                setMessages((prev) => [...prev, newMessage]);
+            }
+
+        } catch (error) {
+            console.error("sendMessage error:", error);
+            toast.error("Failed to send message");
+        }
+    };
+
+    const fetchChatMessages = async (userId: number | string) => {
+        try {
+            const { data } = await axios.post("/api/messages/get-messages", { to_user_id: userId });
+            if (data.success) {
+                setMessages(data.messages);
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to fetch messages");
+        }
+    };
 
     useEffect(() => {
         refreshUser();
@@ -447,7 +515,10 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         toggleFollow,
         toggleConnectionRequest,
         acceptConnectionRequest,
-        declineConnectionRequest
+        declineConnectionRequest,
+        messages, setMessages,
+        sendMessage,
+        fetchChatMessages
     };
 
     return (

@@ -12,9 +12,6 @@ import moment from "moment";
 import ProfileModal from "@/components/ProfileModal";
 import { UserContext } from "@/context/UserContext";
 
-type UserData = typeof dummyUserData;
-type PostsData = typeof dummyPostsData;
-
 const Profile = () => {
 
   const context = useContext(UserContext);
@@ -63,7 +60,7 @@ const Profile = () => {
 
           {/* USER INFO */}
           <UserProfileInfo
-            user={isCurrentUser ? user! : otherUser!} 
+            profile={isCurrentUser ? user! : otherUser!} 
             posts={userPosts} 
             profileId={profileId} 
             setShowEdit={setShowEdit} 

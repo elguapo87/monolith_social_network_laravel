@@ -9,7 +9,7 @@ import Loading from "./Loading";
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
     const context = useContext(UserContext);
     if (!context) throw new Error("AuthGuard must be inside UserContextProvider");
-    const { user, loading } = context;
+    const { user, loading, fetchConnections } = context;
 
     const router = useRouter();
 
@@ -17,6 +17,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         if (!loading && !user) {
             router.push("/"); // redirect to login if not logged in
         }
+
+        if (user) {                            
+            fetchConnections();
+        }  
 
     }, [user, loading, router]);
 

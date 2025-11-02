@@ -302,7 +302,7 @@ class UserController extends Controller
             $connection->save();
 
             // Add each user to the other's connections pivot
-            $fromUser = User::select('id', 'full_name', 'username', 'profile_picture', 'bio')
+            $fromUser = User::select('id', 'full_name', 'user_name', 'profile_picture', 'bio')
                 ->findOrFail($fromUserId);
 
             return response()->json([

@@ -1,29 +1,42 @@
 "use client"
 
 import { useRouter } from "next/navigation";
-import { useState } from "react"
-import {
-    dummyFollowersData as followers,
-    dummyFollowingData as following,
-    dummyPendingConnectionsData as pending,
-    dummyConnectionsData as connections,
-    assets
-} from "../../../../public/assets";
+import { useContext, useEffect, useState } from "react"
+import { assets } from "../../../../public/assets";
 import { MessageSquare, UserCheck, UserPlus, UserRoundPen, Users } from "lucide-react";
 import Image from "next/image";
+import { UserContext } from "@/context/UserContext";
 
 const Connections = () => {
+
+    const context = useContext(UserContext);
+    if (!context) throw new Error("Connections must be within UserContextProvider");
+    const {
+        relations,
+        fetchConnections,
+        toggleFollow,
+        user,
+        toggleConnectionRequest,
+        acceptConnectionRequest,
+        declineConnectionRequest
+    } = context;
+
 
     const [currentTab, setCurrentTab] = useState("Followers");
 
     const router = useRouter();
 
     const dataArray = [
-        { label: "Followers", value: followers, icon: Users },
-        { label: "Following", value: following, icon: UserCheck },
-        { label: "Pending", value: pending, icon: UserRoundPen },
-        { label: "Connections", value: connections, icon: UserPlus },
+        { label: "Followers", value: relations.followers, icon: Users },
+        { label: "Following", value: relations.following, icon: UserCheck },
+        { label: "Pending", value: relations.pendingConnections, icon: UserRoundPen },
+        { label: "Incoming", value: relations.incomingConnections, icon: UserRoundPen },
+        { label: "Connections", value: relations.connections, icon: UserPlus },
     ]
+
+    useEffect(() => {
+        fetchConnections();
+    }, []);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -79,7 +92,7 @@ const Connections = () => {
                 <div className="flex flex-wrap gap-6 mt-6">
                     {dataArray.find((item) => item.label === currentTab)?.value.map((user) => (
                         <div
-                            key={user._id}
+                            key={user.id}
                             className="w-full max-w-88 flex gap-5 p-6 bg-white shadow rounded-md"
                         >
                             <Image
@@ -92,12 +105,14 @@ const Connections = () => {
 
                             <div className="flex-1">
                                 <p className="font-medium text-slate-700">{user.full_name}</p>
-                                <p className="text-slate-500">@{user.username}</p>
-                                <p className="text-sm text-slate-600">{user.bio.slice(0, 30)}...</p>
+                                <p className="text-slate-500">@{user.user_name}</p>
+                                <p className="text-sm text-slate-600">
+                                    {user.bio && user.bio.slice(0, 30)}...
+                                </p>
 
                                 <div className="flex max-sm:flex-col gap-2 mt-4">
                                     <button
-                                        onClick={() => router.push(`/auth/profile/${user._id}`)}
+                                        onClick={() => router.push(`/auth/profile/${user.id}`)}
                                         className="w-full p-2 text-sm rounded bg-linear-to-r 
                                         from-indigo-500 to-purple-600 hover:from-indigo-600
                                          hover:to-purple-700 active:scale-95 transition
@@ -108,6 +123,7 @@ const Connections = () => {
 
                                     {currentTab === "Following" && (
                                         <button
+                                            onClick={() => toggleFollow(user.id)}
                                             className="w-full p-2 text-sm rounded bg-slate-100
                                              hover:bg-slate-200 text-black active:scale-95
                                                 transition cursor-pointer"
@@ -118,23 +134,46 @@ const Connections = () => {
 
                                     {currentTab === "Pending" && (
                                         <button
+                                            onClick={() => toggleConnectionRequest(user.id)}
                                             className="w-full p-2 text-sm rounded bg-slate-100
                                              hover:bg-slate-200 text-black active:scale-95
                                               transition cursor-pointer"
                                         >
-                                            Accept
+                                            Cancel
                                         </button>
                                     )}
 
+                                    {currentTab === "Incoming" && (
+                                        <>
+                                            <button
+                                                onClick={() => acceptConnectionRequest(user.id)}
+                                                className="w-full p-2 text-sm rounded bg-slate-100
+                                                 hover:bg-slate-200 text-black active:scale-95
+                                                transition cursor-pointer"
+                                            >
+                                                Accept
+                                            </button>
+
+                                            <button
+                                                onClick={() => declineConnectionRequest(user.id)}
+                                                className="w-full p-2 text-sm rounded bg-slate-100
+                                                 hover:bg-slate-200 text-black active:scale-95 
+                                                 transition cursor-pointer"
+                                            >
+                                                Reject
+                                            </button>
+                                        </>
+                                    )}
+
                                     {currentTab === "Connections" && (
-                                        <button 
-                                            onClick={() => router.push(`/auth/message/${user._id}`)}
+                                        <button
+                                            onClick={() => router.push(`/auth/chatBox/${user.id}`)}
                                             className="w-full p-2 text-sm rounded bg-slate-100
                                              hover:bg-slate-200 text-black active:scale-95
                                               transition cursor-pointer flex items-center justify-center gap-1"
                                         >
                                             <MessageSquare className="w-4 h-4" />
-                                            Message 
+                                            Message
                                         </button>
                                     )}
                                 </div>
@@ -142,7 +181,6 @@ const Connections = () => {
                         </div>
                     ))}
                 </div>
-
             </div>
         </div>
     )

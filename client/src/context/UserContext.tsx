@@ -100,6 +100,8 @@ interface UserContextType {
     relations: ConnectionType;
     toggleFollow: (userId: number | string) => Promise<void>;
     toggleConnectionRequest: (userId: string | number) => Promise<void>;
+    acceptConnectionRequest: (userId: number | string) => Promise<void>;
+    declineConnectionRequest: (userId: number | string) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -373,6 +375,54 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const acceptConnectionRequest = async (userId: number | string) => {
+        try {
+            const { data } = await axios.post("api/connections/accept", { id: userId });
+            if (data.success) {
+                toast.success(data.message);
+                setRelations((prev) => ({
+                    ...prev,
+                    incomingConnections: prev.incomingConnections.filter(
+                        (u) => String(u.id) !== String(userId)
+                    ),
+                    connections: data.connection
+                        ? [...prev.connections, data.connection]
+                        : prev.connections
+                }));
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("acceptConnectionRequest error:", error);
+            toast.error("Something went wrong.");
+        }
+    };
+
+    const declineConnectionRequest = async (userId: number | string) => {
+        try {
+            const { data } = await axios.post("/api/connections/decline", { id: userId });
+            if (data.success) {
+                toast.success(data.message);
+                setRelations((prev) => ({
+                    ...prev,
+                    incomingConnections: prev.incomingConnections.filter(
+                        (u) => String(u.id) !== String(data.declined_user_id)
+                    )
+                }));
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error("declineConnectionRequest error:", error);
+            toast.error("Something went wrong.");
+        }
+    };
+
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -395,7 +445,9 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         fetchConnections,
         relations,
         toggleFollow,
-        toggleConnectionRequest
+        toggleConnectionRequest,
+        acceptConnectionRequest,
+        declineConnectionRequest
     };
 
     return (

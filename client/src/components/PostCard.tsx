@@ -106,7 +106,7 @@ const PostCard = ({ post }: { post: FeedsData }) => {
                 </div>
             </div>
 
-            {showComments && <PostComments />}
+            {showComments && <PostComments postId={post.id} />}
         </div>
     )
 }

@@ -107,7 +107,7 @@ type CommentType = {
     user: {
         id: number;
         full_name: string;
-        username: string;
+        user_name: string;
         profile_picture: string | null;
     };
     content: string;

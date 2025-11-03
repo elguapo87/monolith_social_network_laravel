@@ -68,13 +68,13 @@ const ChatBox = () => {
     };
 
     useEffect(() => {
-        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, []);
-
-    useEffect(() => {
         fetchSelectedUser(numericUserId);
         fetchChatMessages(numericUserId);
     }, [numericUserId]);
+
+     useEffect(() => {
+        messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     return otherUser && (
         <div className="flex flex-col h-screen">

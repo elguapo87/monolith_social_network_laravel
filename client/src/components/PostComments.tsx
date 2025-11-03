@@ -26,16 +26,19 @@ const PostComments = ({ postId }: { postId: number }) => {
   const comments = commentsByPost[postId] || [];
 
   const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoading) return;
+    if (!newComment.trim()) return;
+    setIsLoading(true);
+
+    const commentText = newComment;
+    setNewComment("");
+
     try {
-      e.preventDefault();
 
       await axios.get("/sanctum/csrf-cookie");
 
-      if (!newComment.trim()) return;
-
-      setIsLoading(true);
-
-      const { data } = await axios.post(`/api/comments/${postId}/add`, { content: newComment });
+      const { data } = await axios.post(`/api/comments/${postId}/add`, { content: commentText });
       if (data.success) {
         setCommentsByPost((prev) => ({
           ...prev,
@@ -52,6 +55,24 @@ const PostComments = ({ postId }: { postId: number }) => {
 
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      const { data } = await axios.delete(`/api/comments/${id}/delete`);
+      if (data.success) {
+        toast.success(data.message);
+        await fetchComments(postId);
+        await fetchCommentsCount(postId)
+      
+      } else {
+        toast.error(data.message);
+      }
+
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete comment");
     }
   };
 
@@ -72,6 +93,7 @@ const PostComments = ({ postId }: { postId: number }) => {
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <input
               onChange={(e) => setNewComment(e.target.value)}
+              disabled={isLoading}
               value={newComment}
               type="text"
               placeholder="Write a comment..."
@@ -94,7 +116,7 @@ const PostComments = ({ postId }: { postId: number }) => {
             )}
 
             {comments.map((comment) => (
-              <div key={comment.id} className="flex items-center gap-2">
+              <div key={comment?.id} className="flex items-center gap-2">
                 <Image 
                   src={comment?.user?.profile_picture || assets.avatar_icon}
                   alt=""
@@ -108,6 +130,15 @@ const PostComments = ({ postId }: { postId: number }) => {
                 </div>
 
                 {/* DELETE BUTTON (VISIBLE ON HOVER) */}
+                {comment?.user?.id === user?.id && (
+                  <button
+                    onClick={() => handleDelete(comment?.id)}
+                    className="opacity-0 group-hover:opacity-100 text-gray-400 cursor-pointer
+                      hover:text-red-500 hover:opacity-100 transition font-semibold"
+                  >
+                    ✕
+                  </button>
+                )}
                 
               </div>
             ))}

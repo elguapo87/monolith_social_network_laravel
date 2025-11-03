@@ -145,8 +145,8 @@ interface UserContextType {
     commentsByPost: Record<number, CommentType[]>;
     setCommentsByPost: React.Dispatch<React.SetStateAction<Record<number, CommentType[]>>>;
     fetchComments: (postId: number) => Promise<void>;
-    commentCount: Record<number, number>;
-    fetchCommentCount: (postId: number) => Promise<void>;
+    commentsCount: Record<number, number>;
+    fetchCommentsCount: (postId: number) => Promise<void>;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -169,7 +169,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     });
     const [messages, setMessages] = useState<MessageType[]>([]);
     const [commentsByPost, setCommentsByPost] = useState<Record<number, CommentType[]>>({});
-    const [commentCount, setCommentCount] = useState<Record<number, number>>({});
+    const [commentsCount, setCommentsCount] = useState<Record<number, number>>({});
 
     const router = useRouter();
 
@@ -526,11 +526,11 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const fetchCommentCount = async (postId: number) => {
+    const fetchCommentsCount = async (postId: number) => {
         try {
             const { data } = await axios.get(`/api/comments/${postId}/comments-count`);
             if (data.success) {
-                setCommentCount((prev) => ({
+                setCommentsCount((prev) => ({
                     ...prev,
                     [postId]: data.count
                 }));
@@ -572,8 +572,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         fetchChatMessages,
         commentsByPost, setCommentsByPost,
         fetchComments,
-        commentCount,
-        fetchCommentCount
+        commentsCount,
+        fetchCommentsCount
     };
 
     return (

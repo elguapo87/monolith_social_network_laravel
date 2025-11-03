@@ -1,10 +1,11 @@
-import { useContext, useState } from "react";
-import { assets, dummyUserData } from "../../public/assets"
+import { useContext, useEffect, useState } from "react";
+import { assets } from "../../public/assets"
 import Image from "next/image";
 import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FeedsData, UserContext } from "@/context/UserContext";
+import PostComments from "./PostComments";
 
 
 
@@ -12,14 +13,22 @@ const PostCard = ({ post }: { post: FeedsData }) => {
 
     const context = useContext(UserContext);                                             
     if (!context) throw new Error("PostCard must be within UserContextProvider");
-    const { likePost } = context
+    const { likePost, commentsCount, fetchCommentsCount } = context
+
+    const [showComments, setShowComments] = useState(false);
 
     const postWithHashtags = post.content.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>');
 
-    const [likes, setLikes] = useState(post.likes_count);
-    const currentUser = dummyUserData;
-
     const router = useRouter();
+
+    const commentsLength = commentsCount[post.id] || [];
+
+    useEffect(() => {
+        fetchCommentsCount(post.id);
+    }, [post.id]);
+
+    console.log(commentsLength);
+    
 
     return (
         <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
@@ -51,13 +60,17 @@ const PostCard = ({ post }: { post: FeedsData }) => {
             {/* CONTENT */}
             {post.content && (
                 <div
-                    className="text-gray-800 text-sm whitespace-pre-line"
+                    onClick={() => router.push(`/auth/post/${post.id}`)}
+                    className="text-gray-800 text-sm whitespace-pre-line cursor-pointer"
                         dangerouslySetInnerHTML={{__html: postWithHashtags}} 
                 />
             )}
 
             {/* IMAGES */}
-            <div className="grid grid-cols-2 gap-2">
+            <div 
+                onClick={() => router.push(`/auth/post/${post.id}`)}
+                className="grid grid-cols-2 gap-2 cursor-pointer"
+            >
                 {post.image_urls.map((img, index) => (
                     <Image 
                         key={index}
@@ -82,9 +95,9 @@ const PostCard = ({ post }: { post: FeedsData }) => {
                     <span>{post.likes_count}</span>
                 </div>
 
-                <div className="flex items-center gap-1">
+                <div onClick={() => setShowComments(prev => !prev)} className="flex items-center gap-1">
                     <MessageCircle className="w-4 h-4" />
-                    <span>{12}</span>
+                    <span>{commentsLength}</span>
                 </div>
 
                 <div className="flex items-center gap-1">
@@ -92,6 +105,8 @@ const PostCard = ({ post }: { post: FeedsData }) => {
                     <span>{7}</span>
                 </div>
             </div>
+
+            {showComments && <PostComments />}
         </div>
     )
 }

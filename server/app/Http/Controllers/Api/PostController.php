@@ -161,7 +161,7 @@ class PostController extends Controller
 
     public function count($postId)
     {
-        $count = Comment::where('post_id', $postId);
+        $count = Comment::where('post_id', $postId)->count();
         return response()->json(['success' => true, 'count' => $count]);
     }
 

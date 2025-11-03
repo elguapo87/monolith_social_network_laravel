@@ -147,6 +147,7 @@ interface UserContextType {
     fetchComments: (postId: number) => Promise<void>;
     commentsCount: Record<number, number>;
     fetchCommentsCount: (postId: number) => Promise<void>;
+    updatePostInFeed: (postId: number, liked_by_me: boolean, likes_count: number) => Promise<void>;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -542,6 +543,20 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const updatePostInFeed = async (postId: number, liked_by_me: boolean, likes_count: number) => {
+        setFeeds(prevFeeds => 
+            prevFeeds.map(post => 
+                post.id === postId ? { ...post, liked_by_me, likes_count } : post
+            )
+        );
+
+        setUserPosts(prevPosts => 
+            prevPosts.map(post => 
+                post.id === postId ? { ...post, liked_by_me, likes_count } : post
+            )
+        );
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -573,7 +588,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         commentsByPost, setCommentsByPost,
         fetchComments,
         commentsCount,
-        fetchCommentsCount
+        fetchCommentsCount,
+        updatePostInFeed
     };
 
     return (

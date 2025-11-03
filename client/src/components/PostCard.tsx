@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { FeedsData, UserContext } from "@/context/UserContext";
 import PostComments from "./PostComments";
 import toast from "react-hot-toast";
+import PostModal from "./PostModal";
 
 
 
@@ -17,6 +18,7 @@ const PostCard = ({ post }: { post: FeedsData }) => {
     const { likePost, commentsCount, fetchCommentsCount } = context
 
     const [showComments, setShowComments] = useState(false);
+    const [showPost, setShowPost] = useState(false);
 
     const postWithHashtags = post.content.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>');
 
@@ -79,7 +81,7 @@ const PostCard = ({ post }: { post: FeedsData }) => {
             {/* CONTENT */}
             {post.content && (
                 <div
-                    onClick={() => router.push(`/auth/post/${post.id}`)}
+                    onClick={() => setShowPost(true)}
                     className="text-gray-800 text-sm whitespace-pre-line cursor-pointer"
                         dangerouslySetInnerHTML={{__html: postWithHashtags}} 
                 />
@@ -87,7 +89,7 @@ const PostCard = ({ post }: { post: FeedsData }) => {
 
             {/* IMAGES */}
             <div 
-                onClick={() => router.push(`/auth/post/${post.id}`)}
+                onClick={() => setShowPost(true)}
                 className="grid grid-cols-2 gap-2 cursor-pointer"
             >
                 {post.image_urls.map((img, index) => (
@@ -126,6 +128,11 @@ const PostCard = ({ post }: { post: FeedsData }) => {
             </div>
 
             {showComments && <PostComments postId={post.id} />}
+
+            {/* SHOW SINGLE POST */}
+            {showPost && (
+                <PostModal setShowPost={setShowPost} post={post} />
+            )}
         </div>
     )
 }

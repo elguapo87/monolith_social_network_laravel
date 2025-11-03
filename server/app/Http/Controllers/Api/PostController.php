@@ -158,4 +158,38 @@ class PostController extends Controller
             'comment' => $comment
         ]);
     }
+
+    public function count($postId)
+    {
+        $count = Comment::where('post_id', $postId);
+        return response()->json(['success' => true, 'count' => $count]);
+    }
+
+    public function deleteComment($id)
+    {
+        try {
+            $comment = Comment::findOrFail($id);
+
+            // Only the comment's author or the post owner can delete
+            if (auth()->id() !== $comment->user_id && auth()->id() !== $comment->post->user_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to delete this comment.'
+                ], 403);
+            }
+
+            $comment->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Comment deleted successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

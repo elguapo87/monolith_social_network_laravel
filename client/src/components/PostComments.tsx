@@ -15,7 +15,8 @@ const PostComments = ({ postId }: { postId: number }) => {
   const { user, commentsByPost, setCommentsByPost, fetchComments, fetchCommentsCount } = context;
 
   const [newComment, setNewComment] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
   useEffect(() => {
@@ -27,15 +28,14 @@ const PostComments = ({ postId }: { postId: number }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isSubmitting) return;
     if (!newComment.trim()) return;
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     const commentText = newComment;
     setNewComment("");
 
     try {
-
       await axios.get("/sanctum/csrf-cookie");
 
       const { data } = await axios.post(`/api/comments/${postId}/add`, { content: commentText });
@@ -54,11 +54,14 @@ const PostComments = ({ postId }: { postId: number }) => {
       toast.error("Failed to add comment");
 
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleDelete = async (id: number) => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+
     try {
       const { data } = await axios.delete(`/api/comments/${id}/delete`);
       if (data.success) {
@@ -73,6 +76,9 @@ const PostComments = ({ postId }: { postId: number }) => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete comment");
+
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -93,7 +99,7 @@ const PostComments = ({ postId }: { postId: number }) => {
           <form onSubmit={handleSubmit} className="flex items-center gap-2">
             <input
               onChange={(e) => setNewComment(e.target.value)}
-              disabled={isLoading}
+              disabled={isSubmitting}
               value={newComment}
               type="text"
               placeholder="Write a comment..."
@@ -102,7 +108,7 @@ const PostComments = ({ postId }: { postId: number }) => {
             />
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="p-1 text-indigo-600 hover:text-indigo-800"
             >
               <Send className="w-5 h-5" />
@@ -133,6 +139,7 @@ const PostComments = ({ postId }: { postId: number }) => {
                 {comment?.user?.id === user?.id && (
                   <button
                     onClick={() => handleDelete(comment?.id)}
+                    disabled={isDeleting}
                     className="opacity-0 group-hover:opacity-100 text-gray-400 cursor-pointer
                       hover:text-red-500 hover:opacity-100 transition font-semibold"
                   >

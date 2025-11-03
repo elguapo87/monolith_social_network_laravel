@@ -6,6 +6,7 @@ import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FeedsData, UserContext } from "@/context/UserContext";
 import PostComments from "./PostComments";
+import toast from "react-hot-toast";
 
 
 
@@ -23,12 +24,30 @@ const PostCard = ({ post }: { post: FeedsData }) => {
 
     const commentsLength = commentsCount[post.id] || [];
 
+    const handleShare = async (postId: number) => {
+        const postUrl = `${window.location.origin}/auth/post/${post.id}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "Check out this post!",
+                    text: "I found this post interesting:",
+                    url: postUrl,
+                });
+
+            } catch (err) {
+                console.log("Share cancelled or failed:", err);
+            }
+
+        } else {
+            navigator.clipboard.writeText(postUrl);
+            toast.success("Post link copied to clipboard!");
+        }
+    };
+
     useEffect(() => {
         fetchCommentsCount(post.id);
     }, [post.id]);
-
-    console.log(commentsLength);
-    
 
     return (
         <div className="bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl">
@@ -101,8 +120,8 @@ const PostCard = ({ post }: { post: FeedsData }) => {
                 </div>
 
                 <div className="flex items-center gap-1">
-                    <Share2 className="w-4 h-4" />
-                    <span>{7}</span>
+                    <Share2 onClick={() => handleShare(post.id)} className="w-4 h-4" />
+                    
                 </div>
             </div>
 

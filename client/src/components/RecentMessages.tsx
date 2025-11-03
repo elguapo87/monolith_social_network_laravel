@@ -62,14 +62,14 @@ const RecentMessages = () => {
             />
 
             <div className="w-full">
-              <div className="flex justify-between">
+              <div className={`flex items-center justify-between ${msg.unread_count === 0 ? "gap-3" : "gap-2"}`}>
                 <p className="font-medium">{msg.user.full_name}</p>
                 <p className="text-[10px] text-slate-400">
                   {moment(msg.latest_created_at).local().fromNow()}
                 </p>
               </div>
 
-              <div className="flex justify-between">
+              <div className="flex items-center justify-between gap-3">
                  <p className="text-gray-500">{msg.latest_message.slice(0, 20)}</p>
                 
                 {msg.unread_count > 0 && (

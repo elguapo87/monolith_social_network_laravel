@@ -40,6 +40,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/comments/{post}/add', [PostController::class, 'addComment']);
     Route::get('/comments/{post}/comments-count', [PostController::class, 'count']);
     Route::delete('/comments/{id}/delete', [PostController::class, 'deleteComment']);
+    Route::get('/posts/{id}', [PostController::class, 'show']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

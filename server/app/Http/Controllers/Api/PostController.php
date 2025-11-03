@@ -192,4 +192,45 @@ class PostController extends Controller
             ], 500);
         }
     }
+
+    public function show($id)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Fetch post with author, likes, and counts
+            $post = Post::with(['author:id,full_name,user_name,profile_picture'])
+                ->withCount(['likes', 'comments'])
+                ->find($id);
+
+            if (!$post) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Post not found',
+                ], 404);
+            }
+
+            // Determine if the current user liked it
+            $likedByMe = false;
+            if ($userId) {
+                $likedByMe = $post->likes()
+                    ->where('user_id', $userId)
+                    ->exists();
+            }
+
+            // Attach liked_by_me flag
+            $post->liked_by_me = $likedByMe;
+
+            return response()->json([
+                'success' => true,
+                'post' => $post,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

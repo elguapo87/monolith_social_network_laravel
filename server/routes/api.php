@@ -36,6 +36,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/users/{id}', [UserController::class, 'getSelectedUser']);
     Route::get('/my-posts', [PostController::class, 'getUserPosts']);    // current user
     Route::get('/users/{id}/posts', [PostController::class, 'getUserPosts']);   // any user
+    Route::get('/comments/{post}/comments', [PostController::class, 'getComments']);
+    Route::post('/comments/{post}/add', [PostController::class, 'addComment']);
 });
 
 Route::get('/imagekit-auth', function (Request $request) {

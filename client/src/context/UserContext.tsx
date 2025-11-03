@@ -102,6 +102,18 @@ type MessageType = {
     seen: boolean;
 };
 
+type CommentType = {                      
+    id: number;
+    user: {
+        id: number;
+        full_name: string;
+        username: string;
+        profile_picture: string | null;
+    };
+    content: string;
+    created_at: string;
+};
+
 interface UserContextType {
     user: UserData | null;
     setUser: React.Dispatch<React.SetStateAction<UserData | null>>;
@@ -130,7 +142,12 @@ interface UserContextType {
     setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
     sendMessage: (userId: number | string, text?: string, mediaUrl?: string) => Promise<void>; 
     fetchChatMessages: (userId: number | string) => Promise<void>;
-}
+    commentsByPost: Record<number, CommentType[]>;
+    setCommentsByPost: React.Dispatch<React.SetStateAction<Record<number, CommentType[]>>>;
+    fetchComments: (postId: number) => Promise<void>;
+    commentCount: Record<number, number>;
+    fetchCommentCount: (postId: number) => Promise<void>;
+};
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -151,6 +168,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         incomingConnections: []
     });
     const [messages, setMessages] = useState<MessageType[]>([]);
+    const [commentsByPost, setCommentsByPost] = useState<Record<number, CommentType[]>>({});
+    const [commentCount, setCommentCount] = useState<Record<number, number>>({});
 
     const router = useRouter();
 
@@ -491,6 +510,38 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const fetchComments = async (postId: number) => {
+        try {
+            const { data } = await axios.get(`/api/comments/${postId}/comments`);
+            if (data.success) {
+                setCommentsByPost((prev) => ({
+                    ...prev,
+                    [postId]: data.comments
+                }));
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to fetch comments");
+        }
+    };
+
+    const fetchCommentCount = async (postId: number) => {
+        try {
+            const { data } = await axios.get(`/api/comments/${postId}/comments-count`);
+            if (data.success) {
+                setCommentCount((prev) => ({
+                    ...prev,
+                    [postId]: data.count
+                }));
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to fetch comments count");
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -518,7 +569,11 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         declineConnectionRequest,
         messages, setMessages,
         sendMessage,
-        fetchChatMessages
+        fetchChatMessages,
+        commentsByPost, setCommentsByPost,
+        fetchComments,
+        commentCount,
+        fetchCommentCount
     };
 
     return (

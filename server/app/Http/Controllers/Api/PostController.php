@@ -233,4 +233,33 @@ class PostController extends Controller
             ], 500);
         }
     }
+
+    public function destroy(Post $post)
+    {
+        try {
+            $userId = Auth::id();
+
+            // Ensure only the author can delete
+            if ($userId !== $post->user_id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized to delete this post.'
+                ], 403);
+            }
+
+            // Delete the post (cascade will handle likes & comments)
+            $post->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Post deleted successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }

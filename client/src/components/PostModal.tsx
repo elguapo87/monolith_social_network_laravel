@@ -168,6 +168,7 @@ const PostModal = ({ setShowPost, post: initialPost, postId, fullPage }: Props) 
 
                         {post?.image_urls.map((img, index) => (
                             <Image
+                                onClick={() => window.open(img, "_blank")}
                                 key={index}
                                 src={img}
                                 alt=""

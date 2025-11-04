@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import { assets } from "../../public/assets"
 import Image from "next/image";
-import { BadgeCheck, Heart, MessageCircle, Share2 } from "lucide-react";
+import { BadgeCheck, Heart, MessageCircle, Share2, Trash } from "lucide-react";
 import moment from "moment";
 import { useRouter } from "next/navigation";
 import { FeedsData, UserContext } from "@/context/UserContext";
@@ -15,10 +15,11 @@ const PostCard = ({ post }: { post: FeedsData }) => {
 
     const context = useContext(UserContext);                                             
     if (!context) throw new Error("PostCard must be within UserContextProvider");
-    const { likePost, commentsCount, fetchCommentsCount } = context
+    const { likePost, commentsCount, fetchCommentsCount, user, deletePost } = context
 
     const [showComments, setShowComments] = useState(false);
     const [showPost, setShowPost] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const postWithHashtags = post.content.replace(/(#\w+)/g, '<span class="text-indigo-600">$1</span>');
 
@@ -44,6 +45,19 @@ const PostCard = ({ post }: { post: FeedsData }) => {
         } else {
             navigator.clipboard.writeText(postUrl);
             toast.success("Post link copied to clipboard!");
+        }
+    };
+
+    const handleDelete = async (postId: number) => {
+        try {
+            setIsLoading(true);
+            if (isLoading) return;
+
+            await deletePost(post.id);
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete post");
         }
     };
 
@@ -123,8 +137,18 @@ const PostCard = ({ post }: { post: FeedsData }) => {
 
                 <div className="flex items-center gap-1">
                     <Share2 onClick={() => handleShare(post.id)} className="w-4 h-4" />
-                    
                 </div>
+
+                {user?.id === post.author.id && (
+                    <button
+                        type="button"
+                        onClick={() => handleDelete(post.id)} 
+                        className="flex items-center gap-1 cursor-pointer"
+                        disabled={isLoading}
+                    >
+                        <Trash className="w-4 h-4 text-red-600" />
+                    </button>
+                )}
             </div>
 
             {showComments && <PostComments postId={post.id} />}

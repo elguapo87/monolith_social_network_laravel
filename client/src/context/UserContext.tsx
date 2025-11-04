@@ -560,7 +560,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
 
     const deletePost = async (postId: number) => {
         try {
-            const { data } = await axios.delete(`/api//posts/${postId}`);
+            const { data } = await axios.delete(`/api/posts/${postId}`);
             if (data.success) {
                 toast.success(data.message);
                 await fetchFeedPosts();

@@ -148,6 +148,7 @@ interface UserContextType {
     commentsCount: Record<number, number>;
     fetchCommentsCount: (postId: number) => Promise<void>;
     updatePostInFeed: (postId: number, liked_by_me: boolean, likes_count: number) => Promise<void>;
+    deletePost: (postId: number) => Promise<void>;
 };
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -557,6 +558,23 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         );
     };
 
+    const deletePost = async (postId: number) => {
+        try {
+            const { data } = await axios.delete(`/api//posts/${postId}`);
+            if (data.success) {
+                toast.success(data.message);
+                await fetchFeedPosts();
+
+            } else {
+                toast.error(data.message);
+            }
+
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete post");
+        }
+    };
+
     useEffect(() => {
         refreshUser();
     }, []);
@@ -589,7 +607,8 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         fetchComments,
         commentsCount,
         fetchCommentsCount,
-        updatePostInFeed
+        updatePostInFeed,
+        deletePost
     };
 
     return (

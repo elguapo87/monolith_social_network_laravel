@@ -78,7 +78,7 @@ type ConnectionType = {
     incomingConnections: RelationUser[];
 };
 
-type MessageType = {            
+type MessageType = {
     id: number;
     from_user: {
         id: number;
@@ -102,7 +102,7 @@ type MessageType = {
     seen: boolean;
 };
 
-type CommentType = {                      
+type CommentType = {
     id: number;
     user: {
         id: number;
@@ -138,9 +138,9 @@ interface UserContextType {
     toggleConnectionRequest: (userId: string | number) => Promise<void>;
     acceptConnectionRequest: (userId: number | string) => Promise<void>;
     declineConnectionRequest: (userId: number | string) => Promise<void>;
-    messages: MessageType[]; 
+    messages: MessageType[];
     setMessages: React.Dispatch<React.SetStateAction<MessageType[]>>;
-    sendMessage: (userId: number | string, text?: string, mediaUrl?: string) => Promise<void>; 
+    sendMessage: (userId: number | string, text?: string, mediaUrl?: string) => Promise<void>;
     fetchChatMessages: (userId: number | string) => Promise<void>;
     commentsByPost: Record<number, CommentType[]>;
     setCommentsByPost: React.Dispatch<React.SetStateAction<Record<number, CommentType[]>>>;
@@ -290,22 +290,44 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    // const likePost = async (postId: number | string) => {
+    //     try {
+    //         const { data } = await axios.post(`/api/posts/${postId}/like`);
+    //         if (data.success) {
+    //             toast.success(data.message);
+
+    //             setFeeds(prev =>
+    //                 prev.map(post =>
+    //                     post.id === postId
+    //                         ? {
+    //                             ...post,
+    //                             liked_by_me: data.isLiked,
+    //                             likes_count: data.likes_count ?? post.likes_count
+    //                         }
+    //                         : post
+    //                 )
+    //             );
+
+    //         } else {
+    //             toast.error(data.message);
+    //         }
+
+    //     } catch (error) {
+    //         console.error(error);
+    //         throw error;
+    //     }
+    // };
+
     const likePost = async (postId: number | string) => {
         try {
             const { data } = await axios.post(`/api/posts/${postId}/like`);
             if (data.success) {
                 toast.success(data.message);
 
-                setFeeds(prev =>
-                    prev.map(post =>
-                        post.id === postId
-                            ? {
-                                ...post,
-                                liked_by_me: data.isLiked,
-                                likes_count: data.likes_count ?? post.likes_count
-                            }
-                            : post
-                    )
+                updatePostInFeed(
+                    Number(postId),
+                    data.isLiked,
+                    data.likes_count
                 );
 
             } else {
@@ -317,6 +339,7 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
             throw error;
         }
     };
+
 
     const fetchStories = async () => {
         try {
@@ -545,14 +568,14 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const updatePostInFeed = async (postId: number, liked_by_me: boolean, likes_count: number) => {
-        setFeeds(prevFeeds => 
-            prevFeeds.map(post => 
+        setFeeds(prevFeeds =>
+            prevFeeds.map(post =>
                 post.id === postId ? { ...post, liked_by_me, likes_count } : post
             )
         );
 
-        setUserPosts(prevPosts => 
-            prevPosts.map(post => 
+        setUserPosts(prevPosts =>
+            prevPosts.map(post =>
                 post.id === postId ? { ...post, liked_by_me, likes_count } : post
             )
         );

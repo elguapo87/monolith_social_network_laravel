@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation"
 import { useContext, useEffect, useState } from "react";
-import { assets, dummyPostsData, dummyUserData } from "../../../../../public/assets";
+import { assets } from "../../../../../public/assets";
 import Loading from "@/components/Loading";
 import Image from "next/image";
 import UserProfileInfo from "@/components/UserProfileInfo";
@@ -16,7 +16,16 @@ const Profile = () => {
 
   const context = useContext(UserContext);
   if (!context) throw new Error("Profile must be within UserContextProvider");
-  const { user, fetchUserPosts, userPosts, setOtherUser, fetchSelectedUser, otherUser } = context;
+  const { 
+    user,
+    fetchUserPosts,
+    userPosts, 
+    setOtherUser, 
+    fetchSelectedUser, 
+    otherUser,
+    fetchFeedPosts,
+    feeds 
+  } = context;
 
   const { profileId } = useParams() as { profileId: string | number };
   
@@ -25,6 +34,10 @@ const Profile = () => {
 
   const numericProfileId = Number(profileId);
   const isCurrentUser = user && user.id === numericProfileId;
+
+  useEffect(() => {
+    fetchFeedPosts();
+  }, []);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -41,6 +54,12 @@ const Profile = () => {
 
     fetchData();
   }, [numericProfileId]);
+
+  const postMap = new Map();
+  [...feeds, ...userPosts].forEach((post) => postMap.set(post.id, post));
+
+  const likedPosts = Array.from(postMap.values())
+    .filter((post) => post.liked_by_me === true);
 
   return isCurrentUser || otherUser ? (
     <div className="relative h-full overflow-y-scroll bg-gray-50 p-6">
@@ -137,6 +156,18 @@ const Profile = () => {
             )}
           </div>
         }
+
+        {activeTab === "likes" && (
+          <div className="mt-6 flex flex-col items-center gap-6">
+            {likedPosts.length > 0 ? (
+              likedPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))
+            ) : (
+              <p className="text-center text-slate-500">No liked posts yet.</p>
+            )}
+          </div>
+        )}
       </div>
       
       {/* EFIT PROFILE MODAL */}

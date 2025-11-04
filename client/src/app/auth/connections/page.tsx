@@ -15,7 +15,6 @@ const Connections = () => {
         relations,
         fetchConnections,
         toggleFollow,
-        user,
         toggleConnectionRequest,
         acceptConnectionRequest,
         declineConnectionRequest
@@ -38,6 +37,10 @@ const Connections = () => {
         fetchConnections();
     }, []);
 
+    const isFollowing = (id: number) => {
+        return relations.following.some((f) => f.id === id);
+    };
+    
     return (
         <div className="min-h-screen bg-slate-50">
             <div className="max-w-6xl mx-auto p-6">
@@ -166,15 +169,39 @@ const Connections = () => {
                                     )}
 
                                     {currentTab === "Connections" && (
-                                        <button
-                                            onClick={() => router.push(`/auth/chatBox/${user.id}`)}
-                                            className="w-full p-2 text-sm rounded bg-slate-100
-                                             hover:bg-slate-200 text-black active:scale-95
-                                              transition cursor-pointer flex items-center justify-center gap-1"
-                                        >
-                                            <MessageSquare className="w-4 h-4" />
-                                            Message
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => router.push(`/auth/chatBox/${user.id}`)}
+                                                className="w-full p-2 text-sm rounded bg-slate-100
+                                                 hover:bg-slate-200 text-black active:scale-95
+                                                  transition cursor-pointer flex items-center
+                                                   justify-center gap-1"
+                                            >
+                                                <MessageSquare className="w-4 h-4" />
+                                                Message
+                                            </button>
+    
+                                            {isFollowing(user.id) ? (
+                                                <button
+                                                    onClick={() => toggleFollow(user.id)}
+                                                    className="w-full text-sm p-2 rounded bg-slate-100
+                                                    hover:bg-slate-200 text-black active:scale-95
+                                                        transition cursor-pointer"
+                                                >
+                                                    Unfollow
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => toggleFollow(user.id)}
+                                                    className="w-full text-sm p-2 rounded bg-linear-to-r
+                                                     from-indigo-500 to-purple-600 hover:from-indigo-600
+                                                      hover:to-purple-700 active:scale-95 transition
+                                                       cursor-pointer text-white"
+                                                >
+                                                    Follow
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>

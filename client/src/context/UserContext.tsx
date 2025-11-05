@@ -290,34 +290,6 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    // const likePost = async (postId: number | string) => {
-    //     try {
-    //         const { data } = await axios.post(`/api/posts/${postId}/like`);
-    //         if (data.success) {
-    //             toast.success(data.message);
-
-    //             setFeeds(prev =>
-    //                 prev.map(post =>
-    //                     post.id === postId
-    //                         ? {
-    //                             ...post,
-    //                             liked_by_me: data.isLiked,
-    //                             likes_count: data.likes_count ?? post.likes_count
-    //                         }
-    //                         : post
-    //                 )
-    //             );
-
-    //         } else {
-    //             toast.error(data.message);
-    //         }
-
-    //     } catch (error) {
-    //         console.error(error);
-    //         throw error;
-    //     }
-    // };
-
     const likePost = async (postId: number | string) => {
         try {
             const { data } = await axios.post(`/api/posts/${postId}/like`);
@@ -339,7 +311,6 @@ const UserContextProvider = ({ children }: { children: React.ReactNode }) => {
             throw error;
         }
     };
-
 
     const fetchStories = async () => {
         try {

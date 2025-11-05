@@ -89,14 +89,25 @@ const Profile = () => {
         {/* TABS */}
         <div className="mt-6">
           <div className="bg-white rounded-xl shadow p-1 flex max-w-md mx-auto">
-            {["posts", "media", "likes"].map((tab) => (
+            {user?.id === numericProfileId ? (
+              ["posts", "media", "likes"].map((tab) => (
+                <button
+                  onClick={() => setActiveTab(tab)}
+                  key={tab} 
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer
+                    ${activeTab === tab ? "bg-indigo-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+              ))
+            ) : ["posts", "media"].map((tab) => (
               <button
-                onClick={() => setActiveTab(tab)}
-                key={tab} 
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer
-                  ${activeTab === tab ? "bg-indigo-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
-              >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  onClick={() => setActiveTab(tab)}
+                  key={tab} 
+                  className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer
+                    ${activeTab === tab ? "bg-indigo-600 text-white" : "text-gray-600 hover:text-gray-900"}`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -156,7 +167,7 @@ const Profile = () => {
             )}
           </div>
         }
-
+        
         {activeTab === "likes" && (
           <div className="mt-6 flex flex-col items-center gap-6">
             {likedPosts.length > 0 ? (

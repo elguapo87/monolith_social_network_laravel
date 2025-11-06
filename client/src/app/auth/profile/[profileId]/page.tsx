@@ -132,7 +132,7 @@ const Profile = () => {
         {
           activeTab === "media"
             &&
-          <div className="flex flex-wrap mt-6 max-w-6xl">
+          <div className="flex gap-2 flex-wrap mt-6 max-w-6xl">
             {userPosts.filter((post) => post.image_urls.length > 0).length > 0 ? (
               userPosts.filter((post) => post.image_urls.length > 0).map((post) => (
                 <div key={post.id}>

@@ -22,7 +22,7 @@ const UserProfileInfo = ({ profile, posts, profileId, setShowEdit }: ProfileProp
         <div className="relative py-4 px-6 md:px-8 bg-white">
             <div className="flex flex-col md:flex-row items-start gap-6">
 
-                <div className="w-32 h-32 border-4 border-white shadow-lg absolute -top-16 rounded-full">
+                <div className="w-32 h-32 border-4 border-white shadow-lg absolute -top-16 rounded-fulls">
                     {profile?.profile_picture && (
                         <Image 
                             src={profile.profile_picture || assets.avatar_icon} 

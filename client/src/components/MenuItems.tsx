@@ -17,7 +17,7 @@ const MenuItems = ({ setSidebarOpen } : SidebarProps) => {
     const { user } = context;
 
     const menuItemsData = [
-        { to: '/', label: 'Feed', Icon: Home },
+        { to: '/auth', label: 'Feed', Icon: Home },
         { to: '/auth/messages', label: 'Messages', Icon: MessageCircle },
         { to: '/auth/connections', label: 'Connections', Icon: Users },
         { to: '/auth/discover', label: 'Discover', Icon: Search },
